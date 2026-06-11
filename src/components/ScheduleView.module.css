@@ -1,0 +1,278 @@
+.root {
+  padding: 20px 0;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  width: 44px;
+  flex-shrink: 0;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pill {
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+.pill:hover {
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+.pillActive {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.select {
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.matchCount {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.day {
+  margin-bottom: 28px;
+}
+
+.dayHeader {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.matchList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.matchCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  transition: border-color 0.15s;
+}
+.matchCard:hover {
+  border-color: var(--border);
+}
+.matchCard.played {
+  border-color: var(--border);
+}
+
+.matchMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.matchTime {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.groupBadge {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.venue {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.matchBody {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.teamSide {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.teamSideRight {
+  justify-content: flex-end;
+}
+
+.teamFlag {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.teamName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.winner .teamName {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.scoreBox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 80px;
+  justify-content: center;
+}
+.scoreBox:hover {
+  background: var(--bg-surface2);
+  border-color: var(--accent);
+}
+
+.vsLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.scoreDash {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0 2px;
+}
+
+.scoreBox span:not(.scoreDash):not(.vsLabel) {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.winScore {
+  color: var(--text-primary) !important;
+}
+
+.scoreEdit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-direction: column;
+}
+
+.scoreEdit > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scoreInput {
+  width: 44px;
+  text-align: center;
+  padding: 6px 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 800;
+  outline: none;
+  -moz-appearance: textfield;
+}
+.scoreInput::-webkit-outer-spin-button,
+.scoreInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.scoreSep {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.editActions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.saveBtn, .cancelBtn {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.saveBtn {
+  background: var(--green);
+  color: #000;
+}
+.cancelBtn {
+  background: var(--bg-surface2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.venueFull {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}

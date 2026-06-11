@@ -1,0 +1,169 @@
+.root {
+  padding: 20px 0;
+}
+
+.groupNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.groupBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.15s;
+}
+.groupBtn:hover {
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.groupBtnActive {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table thead {
+  background: var(--bg-surface);
+}
+
+.table th {
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.thPos { width: 36px; }
+.thTeam { text-align: left; min-width: 180px; }
+.thGd { color: var(--text-secondary) !important; }
+.thPts { color: var(--accent-gold) !important; }
+
+.table td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.row {
+  background: var(--bg-card);
+  transition: background 0.1s;
+}
+.row:hover {
+  background: var(--bg-card-hover);
+}
+
+.qualifyRow {
+  background: rgba(232, 72, 74, 0.04);
+}
+
+.pos {
+  color: var(--text-muted);
+  font-size: 12px;
+  position: relative;
+}
+
+.qualifyDot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 4px;
+  vertical-align: middle;
+  margin-bottom: 1px;
+}
+
+.tdTeam {
+  text-align: left !important;
+  padding-left: 16px !important;
+}
+
+.flag {
+  font-size: 18px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.name {
+  font-weight: 600;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.conf {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.statGreen {
+  color: var(--green) !important;
+  font-weight: 600;
+}
+
+.statRed {
+  color: var(--red) !important;
+  font-weight: 600;
+}
+
+.gd {
+  font-weight: 600;
+}
+.gdPos { color: var(--green) !important; }
+.gdNeg { color: var(--red) !important; }
+
+.pts {
+  font-weight: 800 !important;
+  font-size: 15px !important;
+  color: var(--accent-gold) !important;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.legendText {
+  font-size: 12px;
+  color: var(--text-muted);
+}
