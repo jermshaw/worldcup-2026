@@ -88,9 +88,9 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
     // Use the viewer's local timezone so kick-off times are always "when to watch"
     const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
     const timeStr = date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: false,
+      hour12: true,
     });
 
     const finished = m.status === 'FINISHED';
