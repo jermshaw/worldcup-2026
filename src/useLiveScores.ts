@@ -1,106 +1,64 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { Match } from './data';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import type { Match, Team } from './data';
+import { buildFromApi } from './data';
+import type { ApiResponse } from './api';
 
-// Maps football-data.org 3-letter codes → our team IDs
-const TLA_TO_ID: Record<string, string> = {
-  USA: 'usa', MEX: 'mex', URU: 'uri', PAN: 'pan',
-  ARG: 'arg', CAN: 'can', CHI: 'chi', ALB: 'alb',
-  BRA: 'bra', GER: 'ger', JPN: 'jap', SLE: 'sle',
-  FRA: 'fra', MAR: 'mor', CRO: 'cro', BEL: 'bel',
-  ESP: 'spa', NED: 'ned', SEN: 'sen', SRB: 'srb',
-  ENG: 'eng', POR: 'por', COL: 'col', THA: 'tha',
-  ITA: 'ita', NGA: 'nga', KOR: 'kor',
-  POL: 'pol', ECU: 'ecu', EGY: 'egy',
-  DEN: 'den', AUS: 'aus', PER: 'per', TUN: 'tun',
-  UKR: 'ukr', IRN: 'irn', NZL: 'nzl',
-  SUI: 'swi', TUR: 'tur', CMR: 'cmr', KSA: 'ksa',
-  VEN: 'ven', GHA: 'gha',
-};
+export type LiveStatus = 'loading' | 'live' | 'error';
 
-interface ApiMatch {
-  id: number;
-  utcDate: string;
-  status: string;
-  stage: string;
-  group: string | null;
-  matchday: number | null;
-  homeTeam: { tla: string };
-  awayTeam: { tla: string };
-  score: {
-    fullTime: { home: number | null; away: number | null };
-  };
-}
-
-function mapApiMatch(apiMatch: ApiMatch): Partial<Match> & { homeTeamTla: string; awayTeamTla: string } {
-  const date = new Date(apiMatch.utcDate);
-  const dateStr = date.toISOString().split('T')[0];
-  const timeStr = date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'America/New_York',
-  });
-
-  const finished = apiMatch.status === 'FINISHED';
-
-  return {
-    homeTeamTla: apiMatch.homeTeam.tla,
-    awayTeamTla: apiMatch.awayTeam.tla,
-    date: dateStr,
-    time: timeStr,
-    homeScore: finished ? (apiMatch.score.fullTime.home ?? null) : null,
-    awayScore: finished ? (apiMatch.score.fullTime.away ?? null) : null,
-  };
-}
-
-export type LiveStatus = 'idle' | 'loading' | 'live' | 'error';
-
-export function useLiveScores(
-  matches: Match[],
-  onUpdate: (updated: Match[]) => void
-) {
-  const [status, setStatus] = useState<LiveStatus>('idle');
+export function useLiveScores() {
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [teams, setTeams] = useState<Map<string, Team>>(new Map());
+  const [status, setStatus] = useState<LiveStatus>('loading');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const matchesRef = useRef<Match[]>([]);
 
   const fetchScores = useCallback(async () => {
-    setStatus('loading');
     try {
       const res = await fetch('/.netlify/functions/scores');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data: ApiResponse = await res.json();
+      if (!data.matches) throw new Error('No matches in response');
 
-      if (!data.matches) throw new Error('Unexpected API response');
+      const { matches: newMatches, teams: newTeams } = buildFromApi(data);
 
-      const updated = matches.map(m => {
-        const apiMatch = (data.matches as ApiMatch[]).find(a => {
-          const homeId = TLA_TO_ID[a.homeTeam.tla];
-          const awayId = TLA_TO_ID[a.awayTeam.tla];
-          return homeId === m.homeTeamId && awayId === m.awayTeamId;
-        });
+      // On subsequent fetches, preserve any manually-entered scores
+      // that the API hasn't confirmed yet (status still SCHEDULED)
+      if (matchesRef.current.length > 0) {
+        const prevById = new Map(matchesRef.current.map(m => [m.apiId, m]));
+        for (const m of newMatches) {
+          const prev = prevById.get(m.apiId);
+          if (prev && m.homeScore === null && prev.homeScore !== null) {
+            m.homeScore = prev.homeScore;
+            m.awayScore = prev.awayScore;
+          }
+        }
+      }
 
-        if (!apiMatch) return m;
-        const mapped = mapApiMatch(apiMatch);
-        return {
-          ...m,
-          homeScore: mapped.homeScore ?? m.homeScore,
-          awayScore: mapped.awayScore ?? m.awayScore,
-        };
-      });
-
-      onUpdate(updated);
+      matchesRef.current = newMatches;
+      setMatches(newMatches);
+      setTeams(newTeams);
       setStatus('live');
       setLastUpdated(new Date());
     } catch {
-      setStatus('error');
+      setStatus(prev => prev === 'loading' ? 'error' : prev);
     }
-  }, [matches, onUpdate]);
+  }, []);
 
-  // Fetch on mount, then every 60s
   useEffect(() => {
     fetchScores();
     const interval = setInterval(fetchScores, 60_000);
     return () => clearInterval(interval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchScores]);
 
-  return { status, lastUpdated, refresh: fetchScores };
+  function updateScore(matchId: string, home: number | null, away: number | null) {
+    setMatches(prev => {
+      const updated = prev.map(m =>
+        m.id === matchId ? { ...m, homeScore: home, awayScore: away } : m
+      );
+      matchesRef.current = updated;
+      return updated;
+    });
+  }
+
+  return { matches, teams, status, lastUpdated, refresh: fetchScores, updateScore };
 }

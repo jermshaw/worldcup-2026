@@ -1,37 +1,41 @@
 import { useState, useMemo } from 'react';
-import type { Match, StandingRow, Group } from '../data';
-import { TEAMS, teamMap, venueMap, formatMatchDate } from '../data';
+import type { Match, StandingRow, Group, Team } from '../data';
+import { formatMatchDate } from '../data';
 import styles from './TeamsView.module.css';
 
 interface Props {
   matches: Match[];
+  teams: Map<string, Team>;
   standings: Map<Group, StandingRow[]>;
 }
 
-export default function TeamsView({ matches, standings }: Props) {
-  const [selectedTeamId, setSelectedTeamId] = useState(TEAMS[0].id);
+export default function TeamsView({ matches, teams, standings }: Props) {
+  const teamList = useMemo(
+    () => [...teams.values()].sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name)),
+    [teams]
+  );
 
-  const team = teamMap.get(selectedTeamId)!;
+  const [selectedId, setSelectedId] = useState<string>(teamList[0]?.id ?? '');
+  const team = teams.get(selectedId);
 
   const standing = useMemo(() => {
-    const rows = standings.get(team.group) ?? [];
-    return rows.find(r => r.teamId === selectedTeamId) ?? null;
-  }, [standings, selectedTeamId, team.group]);
-
-  const teamMatches = useMemo(() => {
-    return matches.filter(
-      m => m.homeTeamId === selectedTeamId || m.awayTeamId === selectedTeamId
-    );
-  }, [matches, selectedTeamId]);
+    if (!team) return null;
+    return (standings.get(team.group) ?? []).find(r => r.teamId === selectedId) ?? null;
+  }, [standings, selectedId, team]);
 
   const groupRank = useMemo(() => {
-    const rows = standings.get(team.group) ?? [];
-    return rows.findIndex(r => r.teamId === selectedTeamId) + 1;
-  }, [standings, selectedTeamId, team.group]);
+    if (!team) return 0;
+    return (standings.get(team.group) ?? []).findIndex(r => r.teamId === selectedId) + 1;
+  }, [standings, selectedId, team]);
+
+  const teamMatches = useMemo(
+    () => matches.filter(m => m.homeTeamId === selectedId || m.awayTeamId === selectedId),
+    [matches, selectedId]
+  );
 
   function matchResult(m: Match): 'W' | 'D' | 'L' | null {
     if (m.homeScore === null || m.awayScore === null) return null;
-    const isHome = m.homeTeamId === selectedTeamId;
+    const isHome = m.homeTeamId === selectedId;
     const myScore = isHome ? m.homeScore : m.awayScore;
     const oppScore = isHome ? m.awayScore : m.homeScore;
     if (myScore > oppScore) return 'W';
@@ -39,15 +43,17 @@ export default function TeamsView({ matches, standings }: Props) {
     return 'D';
   }
 
+  if (!team) return null;
+
   return (
     <div className={styles.root}>
       <div className={styles.sidebar}>
         <div className={styles.sidebarInner}>
-          {TEAMS.map(t => (
+          {teamList.map(t => (
             <button
               key={t.id}
-              className={`${styles.teamBtn} ${selectedTeamId === t.id ? styles.teamBtnActive : ''}`}
-              onClick={() => setSelectedTeamId(t.id)}
+              className={`${styles.teamBtn} ${selectedId === t.id ? styles.teamBtnActive : ''}`}
+              onClick={() => setSelectedId(t.id)}
             >
               <span className={styles.teamBtnFlag}>{t.flag}</span>
               <span className={styles.teamBtnName}>{t.name}</span>
@@ -62,9 +68,7 @@ export default function TeamsView({ matches, standings }: Props) {
           <span className={styles.bigFlag}>{team.flag}</span>
           <div>
             <h2 className={styles.teamTitle}>{team.name}</h2>
-            <div className={styles.teamMeta}>
-              Group {team.group} · {team.confederation}
-            </div>
+            <div className={styles.teamMeta}>Group {team.group} · {team.confederation}</div>
           </div>
           {groupRank > 0 && (
             <div className={`${styles.rankBadge} ${groupRank <= 2 ? styles.rankBadgeQualify : ''}`}>
@@ -105,21 +109,17 @@ export default function TeamsView({ matches, standings }: Props) {
         <h3 className={styles.sectionTitle}>Matches</h3>
         <div className={styles.matchList}>
           {teamMatches.map(m => {
-            const isHome = m.homeTeamId === selectedTeamId;
+            const isHome = m.homeTeamId === selectedId;
             const oppId = isHome ? m.awayTeamId : m.homeTeamId;
-            const opp = teamMap.get(oppId)!;
-            const venue = venueMap.get(m.venueId)!;
+            const opp = teams.get(oppId);
+            if (!opp) return null;
             const result = matchResult(m);
-            const myScore = m.homeScore !== null && m.awayScore !== null
-              ? (isHome ? m.homeScore : m.awayScore)
-              : null;
-            const oppScore = m.homeScore !== null && m.awayScore !== null
-              ? (isHome ? m.awayScore : m.homeScore)
-              : null;
+            const myScore = m.homeScore !== null ? (isHome ? m.homeScore : m.awayScore) : null;
+            const oppScore = m.awayScore !== null ? (isHome ? m.awayScore : m.homeScore) : null;
 
             return (
               <div key={m.id} className={`${styles.matchRow} ${result ? styles.played : ''}`}>
-                <div className={styles.matchDate}>{formatMatchDate(m.date, m.time)}</div>
+                <div className={styles.matchDate}>{formatMatchDate(m.date)}</div>
                 <div className={styles.matchInfo}>
                   <span className={styles.homeAway}>{isHome ? 'vs' : '@'}</span>
                   <span className={styles.oppFlag}>{opp.flag}</span>
@@ -132,7 +132,7 @@ export default function TeamsView({ matches, standings }: Props) {
                       <span className={styles.scoreStr}>{myScore}–{oppScore}</span>
                     </>
                   ) : (
-                    <span className={styles.upcoming}>{m.time} · {venue.city}</span>
+                    <span className={styles.upcoming}>{m.time} · {m.venue}</span>
                   )}
                 </div>
               </div>

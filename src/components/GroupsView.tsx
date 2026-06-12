@@ -1,20 +1,21 @@
 import { useState } from 'react';
-import type { Group, StandingRow } from '../data';
-import { GROUPS, teamMap } from '../data';
+import type { Group, StandingRow, Team } from '../data';
 import styles from './GroupsView.module.css';
 
 interface Props {
   standings: Map<Group, StandingRow[]>;
+  teams: Map<string, Team>;
+  activeGroups: Group[];
 }
 
-export default function GroupsView({ standings }: Props) {
-  const [activeGroup, setActiveGroup] = useState<Group>('A');
+export default function GroupsView({ standings, teams, activeGroups }: Props) {
+  const [activeGroup, setActiveGroup] = useState<Group>(activeGroups[0] ?? 'A');
   const rows = standings.get(activeGroup) ?? [];
 
   return (
     <div className={styles.root}>
       <div className={styles.groupNav}>
-        {GROUPS.map(g => (
+        {activeGroups.map(g => (
           <button
             key={g}
             className={`${styles.groupBtn} ${activeGroup === g ? styles.groupBtnActive : ''}`}
@@ -43,7 +44,7 @@ export default function GroupsView({ standings }: Props) {
           </thead>
           <tbody>
             {rows.map((row, idx) => {
-              const team = teamMap.get(row.teamId);
+              const team = teams.get(row.teamId);
               if (!team) return null;
               const qualify = idx < 2;
               return (

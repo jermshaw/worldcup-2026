@@ -1,30 +1,45 @@
-import { useState, useMemo, useCallback } from 'react';
-import { INITIAL_MATCHES, computeStandings } from './data';
-import type { Match } from './data';
+import { useMemo } from 'react';
+import { useState } from 'react';
+import { computeStandings, GROUPS } from './data';
+import { useLiveScores } from './useLiveScores';
 import ScheduleView from './components/ScheduleView';
 import GroupsView from './components/GroupsView';
 import TeamsView from './components/TeamsView';
-import { useLiveScores } from './useLiveScores';
 import styles from './App.module.css';
 
 type Tab = 'schedule' | 'groups' | 'teams';
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('schedule');
-  const [matches, setMatches] = useState<Match[]>(INITIAL_MATCHES);
+  const { matches, teams, status, lastUpdated, refresh, updateScore } = useLiveScores();
 
-  const handleLiveUpdate = useCallback((updated: Match[]) => {
-    setMatches(updated);
-  }, []);
+  const standings = useMemo(
+    () => computeStandings(matches, teams),
+    [matches, teams]
+  );
 
-  const { status, lastUpdated, refresh } = useLiveScores(matches, handleLiveUpdate);
+  const activeGroups = useMemo(
+    () => GROUPS.filter(g => standings.has(g)),
+    [standings]
+  );
 
-  const standings = useMemo(() => computeStandings(matches), [matches]);
   const played = matches.filter(m => m.homeScore !== null).length;
 
-  function handleScoreUpdate(matchId: string, home: number | null, away: number | null) {
-    setMatches(prev =>
-      prev.map(m => m.id === matchId ? { ...m, homeScore: home, awayScore: away } : m)
+  if (status === 'loading') {
+    return (
+      <div className={styles.loadingScreen}>
+        <span className={styles.loadingBall}>⚽</span>
+        <div className={styles.loadingText}>Loading World Cup 2026…</div>
+      </div>
+    );
+  }
+
+  if (status === 'error' && matches.length === 0) {
+    return (
+      <div className={styles.loadingScreen}>
+        <div className={styles.loadingText}>Failed to load scores.</div>
+        <button className={styles.retryBtn} onClick={refresh}>Try again</button>
+      </div>
     );
   }
 
@@ -62,9 +77,11 @@ export default function App() {
               title={lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : 'Click to refresh'}
             >
               <span className={`${styles.liveDot} ${status === 'live' ? styles.liveDotPulse : ''}`} />
-              {status === 'loading' ? 'Updating…' : status === 'error' ? 'Retry' : 'Live'}
+              {status === 'error' ? 'Retry' : 'Live'}
               {lastUpdated && status === 'live' && (
-                <span className={styles.liveTime}>{lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span className={styles.liveTime}>
+                  {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
               )}
             </button>
           </div>
@@ -91,13 +108,13 @@ export default function App() {
       <main className={styles.main}>
         <div className={styles.content}>
           {tab === 'schedule' && (
-            <ScheduleView matches={matches} onScoreUpdate={handleScoreUpdate} />
+            <ScheduleView matches={matches} teams={teams} onScoreUpdate={updateScore} />
           )}
           {tab === 'groups' && (
-            <GroupsView standings={standings} />
+            <GroupsView standings={standings} teams={teams} activeGroups={activeGroups} />
           )}
           {tab === 'teams' && (
-            <TeamsView matches={matches} standings={standings} />
+            <TeamsView matches={matches} teams={teams} standings={standings} />
           )}
         </div>
       </main>

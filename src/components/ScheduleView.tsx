@@ -1,19 +1,30 @@
 import { useState, useMemo } from 'react';
-import type { Match, Group } from '../data';
-import { TEAMS, GROUPS, teamMap, venueMap, formatMatchDate } from '../data';
+import type { Match, Team, Group } from '../data';
+import { GROUPS, formatMatchDate } from '../data';
 import styles from './ScheduleView.module.css';
 
 interface Props {
   matches: Match[];
+  teams: Map<string, Team>;
   onScoreUpdate: (matchId: string, home: number | null, away: number | null) => void;
 }
 
-export default function ScheduleView({ matches, onScoreUpdate }: Props) {
+export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
   const [filterGroup, setFilterGroup] = useState<Group | 'All'>('All');
   const [filterTeam, setFilterTeam] = useState('All');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftHome, setDraftHome] = useState('');
   const [draftAway, setDraftAway] = useState('');
+
+  const teamList = useMemo(
+    () => [...teams.values()].sort((a, b) => a.name.localeCompare(b.name)),
+    [teams]
+  );
+
+  const activeGroups = useMemo(
+    () => GROUPS.filter(g => teamList.some(t => t.group === g)),
+    [teamList]
+  );
 
   const filtered = useMemo(() => {
     return matches.filter(m => {
@@ -51,10 +62,6 @@ export default function ScheduleView({ matches, onScoreUpdate }: Props) {
     setEditingId(null);
   }
 
-  function cancelEdit() {
-    setEditingId(null);
-  }
-
   function matchResult(m: Match): 'home' | 'away' | 'draw' | null {
     if (m.homeScore === null || m.awayScore === null) return null;
     if (m.homeScore > m.awayScore) return 'home';
@@ -68,7 +75,11 @@ export default function ScheduleView({ matches, onScoreUpdate }: Props) {
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>Group</span>
           <div className={styles.pills}>
-            {(['All', ...GROUPS] as const).map(g => (
+            <button
+              className={`${styles.pill} ${filterGroup === 'All' ? styles.pillActive : ''}`}
+              onClick={() => setFilterGroup('All')}
+            >All</button>
+            {activeGroups.map(g => (
               <button
                 key={g}
                 className={`${styles.pill} ${filterGroup === g ? styles.pillActive : ''}`}
@@ -85,7 +96,7 @@ export default function ScheduleView({ matches, onScoreUpdate }: Props) {
             onChange={e => setFilterTeam(e.target.value)}
           >
             <option value="All">All teams</option>
-            {TEAMS.map(t => (
+            {teamList.map(t => (
               <option key={t.id} value={t.id}>{t.flag} {t.name}</option>
             ))}
           </select>
@@ -96,14 +107,12 @@ export default function ScheduleView({ matches, onScoreUpdate }: Props) {
 
       {byDate.map(([date, dayMatches]) => (
         <div key={date} className={styles.day}>
-          <div className={styles.dayHeader}>
-            {formatMatchDate(date, '00:00')}
-          </div>
+          <div className={styles.dayHeader}>{formatMatchDate(date)}</div>
           <div className={styles.matchList}>
             {dayMatches.map(m => {
-              const home = teamMap.get(m.homeTeamId)!;
-              const away = teamMap.get(m.awayTeamId)!;
-              const venue = venueMap.get(m.venueId)!;
+              const home = teams.get(m.homeTeamId);
+              const away = teams.get(m.awayTeamId);
+              if (!home || !away) return null;
               const result = matchResult(m);
               const isEditing = editingId === m.id;
 
@@ -112,7 +121,7 @@ export default function ScheduleView({ matches, onScoreUpdate }: Props) {
                   <div className={styles.matchMeta}>
                     <span className={styles.matchTime}>{m.time}</span>
                     <span className={styles.groupBadge}>Group {m.group} · MD{m.matchday}</span>
-                    <span className={styles.venue}>{venue.city}</span>
+                    <span className={styles.venue}>{m.venue}</span>
                   </div>
                   <div className={styles.matchBody}>
                     <div className={`${styles.teamSide} ${result === 'home' ? styles.winner : ''}`}>
@@ -122,35 +131,42 @@ export default function ScheduleView({ matches, onScoreUpdate }: Props) {
 
                     {isEditing ? (
                       <div className={styles.scoreEdit}>
-                        <input
-                          className={styles.scoreInput}
-                          type="number"
-                          min="0"
-                          max="30"
-                          value={draftHome}
-                          onChange={e => setDraftHome(e.target.value)}
-                          autoFocus
-                        />
-                        <span className={styles.scoreSep}>–</span>
-                        <input
-                          className={styles.scoreInput}
-                          type="number"
-                          min="0"
-                          max="30"
-                          value={draftAway}
-                          onChange={e => setDraftAway(e.target.value)}
-                        />
+                        <div>
+                          <input
+                            className={styles.scoreInput}
+                            type="number"
+                            min="0"
+                            max="30"
+                            value={draftHome}
+                            onChange={e => setDraftHome(e.target.value)}
+                            autoFocus
+                          />
+                          <span className={styles.scoreSep}>–</span>
+                          <input
+                            className={styles.scoreInput}
+                            type="number"
+                            min="0"
+                            max="30"
+                            value={draftAway}
+                            onChange={e => setDraftAway(e.target.value)}
+                          />
+                        </div>
                         <div className={styles.editActions}>
                           <button className={styles.saveBtn} onClick={() => commitEdit(m.id)}>✓</button>
-                          <button className={styles.cancelBtn} onClick={cancelEdit}>✕</button>
+                          <button className={styles.cancelBtn} onClick={() => setEditingId(null)}>✕</button>
                         </div>
                       </div>
                     ) : (
                       <button className={styles.scoreBox} onClick={() => startEdit(m)}>
-                        {m.homeScore !== null && m.awayScore !== null
-                          ? <><span className={result === 'home' ? styles.winScore : ''}>{m.homeScore}</span><span className={styles.scoreDash}>–</span><span className={result === 'away' ? styles.winScore : ''}>{m.awayScore}</span></>
-                          : <span className={styles.vsLabel}>vs</span>
-                        }
+                        {m.homeScore !== null && m.awayScore !== null ? (
+                          <>
+                            <span className={result === 'home' ? styles.winScore : ''}>{m.homeScore}</span>
+                            <span className={styles.scoreDash}>–</span>
+                            <span className={result === 'away' ? styles.winScore : ''}>{m.awayScore}</span>
+                          </>
+                        ) : (
+                          <span className={styles.vsLabel}>vs</span>
+                        )}
                       </button>
                     )}
 
@@ -159,7 +175,6 @@ export default function ScheduleView({ matches, onScoreUpdate }: Props) {
                       <span className={styles.teamFlag}>{away.flag}</span>
                     </div>
                   </div>
-                  <div className={styles.venueFull}>{venue.name}, {venue.city} · {venue.country}</div>
                 </div>
               );
             })}
