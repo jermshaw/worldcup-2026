@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { INITIAL_MATCHES, computeStandings } from './data';
 import type { Match } from './data';
 import ScheduleView from './components/ScheduleView';
 import GroupsView from './components/GroupsView';
 import TeamsView from './components/TeamsView';
+import { useLiveScores } from './useLiveScores';
 import styles from './App.module.css';
 
 type Tab = 'schedule' | 'groups' | 'teams';
@@ -12,8 +13,13 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('schedule');
   const [matches, setMatches] = useState<Match[]>(INITIAL_MATCHES);
 
-  const standings = useMemo(() => computeStandings(matches), [matches]);
+  const handleLiveUpdate = useCallback((updated: Match[]) => {
+    setMatches(updated);
+  }, []);
 
+  const { status, lastUpdated, refresh } = useLiveScores(matches, handleLiveUpdate);
+
+  const standings = useMemo(() => computeStandings(matches), [matches]);
   const played = matches.filter(m => m.homeScore !== null).length;
 
   function handleScoreUpdate(matchId: string, home: number | null, away: number | null) {
@@ -50,6 +56,17 @@ export default function App() {
               <span className={styles.headerStatVal}>Jul 19</span>
               <span className={styles.headerStatLbl}>Final</span>
             </div>
+            <button
+              className={`${styles.liveBtn} ${styles[`liveBtnStatus_${status}`]}`}
+              onClick={refresh}
+              title={lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : 'Click to refresh'}
+            >
+              <span className={`${styles.liveDot} ${status === 'live' ? styles.liveDotPulse : ''}`} />
+              {status === 'loading' ? 'Updating…' : status === 'error' ? 'Retry' : 'Live'}
+              {lastUpdated && status === 'live' && (
+                <span className={styles.liveTime}>{lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              )}
+            </button>
           </div>
         </div>
       </header>

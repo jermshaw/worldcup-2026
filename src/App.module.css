@@ -49,6 +49,58 @@
 .headerStats {
   display: flex;
   gap: 24px;
+  align-items: center;
+}
+
+.liveBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.liveBtn:hover {
+  border-color: var(--green);
+  color: var(--text-primary);
+}
+.liveBtnStatus_live {
+  border-color: var(--green);
+  color: var(--green);
+}
+.liveBtnStatus_error {
+  border-color: var(--red);
+  color: var(--red);
+}
+.liveBtnStatus_loading {
+  opacity: 0.7;
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.liveDotPulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.liveTime {
+  font-size: 10px;
+  opacity: 0.7;
+  margin-left: 2px;
 }
 
 .headerStat {
