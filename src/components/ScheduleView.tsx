@@ -1,12 +1,14 @@
-import { useMemo, useEffect, useRef } from 'react';
-import type { Match, Team } from '../data';
+import { useMemo, useEffect, useRef, useState } from 'react';
+import type { Match, Team, Group, StandingRow } from '../data';
 import { formatMatchDate } from '../data';
 import { getTeamColor } from '../teamColors';
+import TeamSheet from './TeamSheet';
 import styles from './ScheduleView.module.css';
 
 interface Props {
   matches: Match[];
   teams: Map<string, Team>;
+  standings: Map<Group, StandingRow[]>;
 }
 
 function isToday(dateStr: string) {
@@ -29,8 +31,26 @@ function dayLabel(dateStr: string): { primary: string; secondary: string } {
   return { primary: formatMatchDate(dateStr), secondary: '' };
 }
 
-export default function ScheduleView({ matches, teams }: Props) {
+export default function ScheduleView({ matches, teams, standings }: Props) {
   const todayRef = useRef<HTMLDivElement>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+  const teamStandings = useMemo(() => {
+    const map = new Map<string, StandingRow>();
+    for (const rows of standings.values()) {
+      for (const row of rows) map.set(row.teamId, row);
+    }
+    return map;
+  }, [standings]);
+
+  const selectedTeam = selectedTeamId ? teams.get(selectedTeamId) : undefined;
+  const selectedRow = selectedTeamId ? teamStandings.get(selectedTeamId) : undefined;
+  const selectedPosition = useMemo(() => {
+    if (!selectedTeam) return 1;
+    const rows = standings.get(selectedTeam.group) ?? [];
+    const idx = rows.findIndex(r => r.teamId === selectedTeamId);
+    return idx >= 0 ? idx + 1 : 1;
+  }, [selectedTeam, selectedTeamId, standings]);
 
   useEffect(() => {
     if (todayRef.current) {
@@ -64,6 +84,7 @@ export default function ScheduleView({ matches, teams }: Props) {
   }
 
   return (
+    <>
     <div className={styles.root}>
       {byDate.map(([date, dayMatches]) => {
         const { primary, secondary } = dayLabel(date);
@@ -89,26 +110,28 @@ export default function ScheduleView({ matches, teams }: Props) {
                 return (
                   <div key={m.id} className={styles.card}>
                     {/* Home side */}
-                    <div
+                    <button
                       className={`${styles.teamSide} ${styles.teamSideLeft} ${homeDim ? styles.teamSideDim : ''}`}
                       style={{ background: homeColor }}
+                      onClick={() => setSelectedTeamId(m.homeTeamId)}
                     >
                       {home.crest
                         ? <img src={home.crest} className={styles.teamFlagImg} alt={home.name} />
                         : <span className={styles.teamFlag}>{home.flag}</span>}
                       <span className={styles.teamName}>{home.name}</span>
-                    </div>
+                    </button>
 
                     {/* Away side */}
-                    <div
+                    <button
                       className={`${styles.teamSide} ${styles.teamSideRight} ${awayDim ? styles.teamSideDim : ''}`}
                       style={{ background: awayColor }}
+                      onClick={() => setSelectedTeamId(m.awayTeamId)}
                     >
                       {away.crest
                         ? <img src={away.crest} className={styles.teamFlagImg} alt={away.name} />
                         : <span className={styles.teamFlag}>{away.flag}</span>}
                       <span className={styles.teamName}>{away.name}</span>
-                    </div>
+                    </button>
 
                     {/* Center overlay */}
                     <div className={styles.overlay}>
@@ -131,5 +154,17 @@ export default function ScheduleView({ matches, teams }: Props) {
         );
       })}
     </div>
+
+      {selectedTeam && (
+        <TeamSheet
+          team={selectedTeam}
+          row={selectedRow}
+          groupPosition={selectedPosition}
+          matches={matches}
+          teams={teams}
+          onClose={() => setSelectedTeamId(null)}
+        />
+      )}
+    </>
   );
 }

@@ -1,0 +1,171 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 430px;
+  max-height: 90vh;
+  background: #16161a;
+  border-radius: 24px 24px 0 0;
+  overflow-y: auto;
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* ── Header ──────────────────────────────────────────── */
+.header {
+  position: relative;
+  padding: 36px 20px 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px 24px 0 0;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 20px;
+}
+
+.flag {
+  font-size: 90px;
+  line-height: 1;
+}
+
+.flagImg {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+
+.teamName {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 25px;
+  font-weight: 400;
+  color: #fff;
+  text-align: center;
+}
+
+.teamSub {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.statsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+}
+
+.statBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.statNum {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 30px;
+  color: #fff;
+  line-height: 1;
+  text-align: center;
+  width: 100%;
+}
+
+.statDim {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.statLbl {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+}
+
+.statDiv {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+/* ── Separator ───────────────────────────────────────── */
+.separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Body ────────────────────────────────────────────── */
+.body {
+  padding: 20px 20px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dateGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dateLabel {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.datePrimary {
+  color: #fff;
+}
+
+.dateSecondary {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.empty {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  text-align: center;
+  padding: 20px 0;
+}

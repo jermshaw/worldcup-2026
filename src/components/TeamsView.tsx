@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react';
-import type { Match, StandingRow, Group, Team } from '../data';
-import { formatMatchDate } from '../data';
+import { useState, useMemo, useEffect } from 'react';
+import type { Match, Team, Group, StandingRow } from '../data';
+import { GROUPS } from '../data';
+import { getTeamColor } from '../teamColors';
+import TeamSheet from './TeamSheet';
 import styles from './TeamsView.module.css';
 
 interface Props {
@@ -10,136 +12,154 @@ interface Props {
 }
 
 export default function TeamsView({ matches, teams, standings }: Props) {
-  const teamList = useMemo(
-    () => [...teams.values()].sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name)),
-    [teams]
+  const [search, setSearch] = useState('');
+  const [sortMode, setSortMode] = useState<'groups' | 'abc'>('groups');
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
+  const teamStandings = useMemo(() => {
+    const map = new Map<string, StandingRow>();
+    for (const rows of standings.values()) {
+      for (const row of rows) map.set(row.teamId, row);
+    }
+    return map;
+  }, [standings]);
+
+  const filteredTeams = useMemo(() => {
+    const q = search.toLowerCase();
+    return [...teams.values()].filter(t =>
+      !q || t.name.toLowerCase().includes(q) || t.id.toLowerCase().includes(q) || `group ${t.group}`.toLowerCase().includes(q)
+    );
+  }, [teams, search]);
+
+  const activeGroups = useMemo(
+    () => GROUPS.filter(g => filteredTeams.some(t => t.group === g)),
+    [filteredTeams]
   );
 
-  const [selectedId, setSelectedId] = useState<string>(teamList[0]?.id ?? '');
-  const team = teams.get(selectedId);
-
-  const standing = useMemo(() => {
-    if (!team) return null;
-    return (standings.get(team.group) ?? []).find(r => r.teamId === selectedId) ?? null;
-  }, [standings, selectedId, team]);
-
-  const groupRank = useMemo(() => {
-    if (!team) return 0;
-    return (standings.get(team.group) ?? []).findIndex(r => r.teamId === selectedId) + 1;
-  }, [standings, selectedId, team]);
-
-  const teamMatches = useMemo(
-    () => matches.filter(m => m.homeTeamId === selectedId || m.awayTeamId === selectedId),
-    [matches, selectedId]
-  );
-
-  function matchResult(m: Match): 'W' | 'D' | 'L' | null {
-    if (m.homeScore === null || m.awayScore === null) return null;
-    const isHome = m.homeTeamId === selectedId;
-    const myScore = isHome ? m.homeScore : m.awayScore;
-    const oppScore = isHome ? m.awayScore : m.homeScore;
-    if (myScore > oppScore) return 'W';
-    if (myScore < oppScore) return 'L';
-    return 'D';
+  function teamsByGroup(g: Group): Team[] {
+    return filteredTeams
+      .filter(t => t.group === g)
+      .sort((a, b) => (teamStandings.get(b.id)?.pts ?? 0) - (teamStandings.get(a.id)?.pts ?? 0));
   }
 
-  if (!team) return null;
+  const sortedAlpha = useMemo(
+    () => [...filteredTeams].sort((a, b) => a.name.localeCompare(b.name)),
+    [filteredTeams]
+  );
+
+  const selectedTeam = selectedTeamId ? teams.get(selectedTeamId) : undefined;
+  const selectedRow = selectedTeamId ? teamStandings.get(selectedTeamId) : undefined;
+  const selectedPosition = useMemo(() => {
+    if (!selectedTeam) return 1;
+    const rows = standings.get(selectedTeam.group) ?? [];
+    const idx = rows.findIndex(r => r.teamId === selectedTeamId);
+    return idx >= 0 ? idx + 1 : 1;
+  }, [selectedTeam, selectedTeamId, standings]);
 
   return (
     <div className={styles.root}>
-      <div className={styles.sidebar}>
-        <div className={styles.sidebarInner}>
-          {teamList.map(t => (
-            <button
-              key={t.id}
-              className={`${styles.teamBtn} ${selectedId === t.id ? styles.teamBtnActive : ''}`}
-              onClick={() => setSelectedId(t.id)}
-            >
-              <span className={styles.teamBtnFlag}>{t.flag}</span>
-              <span className={styles.teamBtnName}>{t.name}</span>
-              <span className={styles.teamBtnGroup}>G{t.group}</span>
-            </button>
+      <div className={styles.titleRow}>
+        <h2 className={styles.title}>Teams</h2>
+        <div className={styles.toggle}>
+          <button
+            className={`${styles.toggleBtn} ${sortMode === 'groups' ? styles.toggleBtnActive : ''}`}
+            onClick={() => setSortMode('groups')}
+          >Groups</button>
+          <button
+            className={`${styles.toggleBtn} ${sortMode === 'abc' ? styles.toggleBtnActive : ''}`}
+            onClick={() => setSortMode('abc')}
+          >ABC</button>
+        </div>
+      </div>
+
+      <div className={styles.searchWrap}>
+        <span className={styles.searchIcon}>🔍</span>
+        <input
+          className={styles.searchInput}
+          placeholder="Search teams or groups"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      {sortMode === 'groups' ? (
+        activeGroups.map(g => (
+          <div key={g} className={styles.group}>
+            <div className={styles.groupHeader}>Group {g}</div>
+            {teamsByGroup(g).map(team => (
+              <TeamCard
+                key={team.id}
+                team={team}
+                row={teamStandings.get(team.id)}
+                onClick={() => setSelectedTeamId(team.id)}
+              />
+            ))}
+          </div>
+        ))
+      ) : (
+        <div className={styles.group}>
+          {sortedAlpha.map(team => (
+            <TeamCard
+              key={team.id}
+              team={team}
+              row={teamStandings.get(team.id)}
+              onClick={() => setSelectedTeamId(team.id)}
+            />
           ))}
         </div>
+      )}
+
+      {selectedTeam && (
+        <TeamSheet
+          team={selectedTeam}
+          row={selectedRow}
+          groupPosition={selectedPosition}
+          matches={matches}
+          teams={teams}
+          onClose={() => setSelectedTeamId(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+interface CardProps {
+  team: Team;
+  row: StandingRow | undefined;
+  onClick: () => void;
+}
+
+function TeamCard({ team, row, onClick }: CardProps) {
+  return (
+    <button className={styles.card} style={{ background: getTeamColor(team.id) }} onClick={onClick}>
+      <div className={styles.cardLeft}>
+        {team.crest
+          ? <img src={team.crest} className={styles.cardFlagImg} alt={team.name} />
+          : <span className={styles.cardFlag}>{team.flag}</span>}
+        <span className={styles.cardName}>{team.name}</span>
       </div>
-
-      <div className={styles.detail}>
-        <div className={styles.teamHeader}>
-          <span className={styles.bigFlag}>{team.flag}</span>
-          <div>
-            <h2 className={styles.teamTitle}>{team.name}</h2>
-            <div className={styles.teamMeta}>Group {team.group} · {team.confederation}</div>
-          </div>
-          {groupRank > 0 && (
-            <div className={`${styles.rankBadge} ${groupRank <= 2 ? styles.rankBadgeQualify : ''}`}>
-              #{groupRank} in Group {team.group}
-            </div>
-          )}
-        </div>
-
-        {standing && (
-          <div className={styles.statGrid}>
-            <div className={styles.statCard}>
-              <div className={styles.statVal}>{standing.mp}</div>
-              <div className={styles.statLbl}>Played</div>
-            </div>
-            <div className={`${styles.statCard} ${styles.statCardGreen}`}>
-              <div className={styles.statVal}>{standing.w}</div>
-              <div className={styles.statLbl}>Wins</div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statVal}>{standing.d}</div>
-              <div className={styles.statLbl}>Draws</div>
-            </div>
-            <div className={`${styles.statCard} ${styles.statCardRed}`}>
-              <div className={styles.statVal}>{standing.l}</div>
-              <div className={styles.statLbl}>Losses</div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statVal}>{standing.gf}–{standing.ga}</div>
-              <div className={styles.statLbl}>GF–GA</div>
-            </div>
-            <div className={`${styles.statCard} ${styles.statCardGold}`}>
-              <div className={styles.statVal}>{standing.pts}</div>
-              <div className={styles.statLbl}>Points</div>
-            </div>
-          </div>
-        )}
-
-        <h3 className={styles.sectionTitle}>Matches</h3>
-        <div className={styles.matchList}>
-          {teamMatches.map(m => {
-            const isHome = m.homeTeamId === selectedId;
-            const oppId = isHome ? m.awayTeamId : m.homeTeamId;
-            const opp = teams.get(oppId);
-            if (!opp) return null;
-            const result = matchResult(m);
-            const myScore = m.homeScore !== null ? (isHome ? m.homeScore : m.awayScore) : null;
-            const oppScore = m.awayScore !== null ? (isHome ? m.awayScore : m.homeScore) : null;
-
-            return (
-              <div key={m.id} className={`${styles.matchRow} ${result ? styles.played : ''}`}>
-                <div className={styles.matchDate}>{formatMatchDate(m.date)}</div>
-                <div className={styles.matchInfo}>
-                  <span className={styles.homeAway}>{isHome ? 'vs' : '@'}</span>
-                  <span className={styles.oppFlag}>{opp.flag}</span>
-                  <span className={styles.oppName}>{opp.name}</span>
-                </div>
-                <div className={styles.matchScore}>
-                  {result !== null && myScore !== null && oppScore !== null ? (
-                    <>
-                      <span className={`${styles.resultBadge} ${styles[`result${result}`]}`}>{result}</span>
-                      <span className={styles.scoreStr}>{myScore}–{oppScore}</span>
-                    </>
-                  ) : (
-                    <span className={styles.upcoming}>{m.time} · {m.venue}</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className={styles.cardStats}>
+        <StatCol label="Pts" value={row?.pts ?? 0} />
+        <div className={styles.statDivider} />
+        <StatCol label="Wins" value={row?.w ?? 0} />
+        <div className={styles.statDivider} />
+        <StatCol label="Loss" value={row?.l ?? 0} dim={(row?.l ?? 0) === 0} />
+        <div className={styles.statDivider} />
+        <StatCol label="Draw" value={row?.d ?? 0} dim={(row?.d ?? 0) === 0} />
       </div>
+    </button>
+  );
+}
+
+function StatCol({ label, value, dim }: { label: string; value: number; dim?: boolean }) {
+  return (
+    <div className={styles.statCol}>
+      <span className={`${styles.statNum} ${dim ? styles.statDim : ''}`}>{value}</span>
+      <span className={`${styles.statLbl} ${dim ? styles.statDim : ''}`}>{label}</span>
     </div>
   );
 }

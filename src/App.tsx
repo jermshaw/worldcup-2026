@@ -5,8 +5,11 @@ import ScheduleView from './components/ScheduleView';
 import GroupsView from './components/GroupsView';
 import TeamsView from './components/TeamsView';
 import styles from './App.module.css';
+import tabSchedule from './assets/nav/tab-schedule.png';
+import tabTeams from './assets/nav/tab-teams.png';
+import tabStandings from './assets/nav/tab-standings.png';
 
-type Tab = 'schedule' | 'groups' | 'teams';
+type Tab = 'schedule' | 'teams' | 'standings';
 
 const WC_LOGO = 'https://www.figma.com/api/mcp/asset/23df7400-0e77-4372-860f-065ebc722074';
 const FINAL_DATE = new Date('2026-07-19');
@@ -48,10 +51,19 @@ export default function App() {
 
   return (
     <div className={styles.app}>
-      <header className={styles.header}>
-        <img src={WC_LOGO} alt="World Cup 2026" className={styles.logo} />
-        <h1 className={styles.title}>WORLD CUP 2026</h1>
-        <div className={styles.subtitle}>{days} days left</div>
+      {tab !== 'teams' && <header className={styles.header}>
+        <div className={styles.headerTop}>
+          <img src={WC_LOGO} alt="World Cup 2026" className={styles.logo} />
+          <h1 className={styles.title}>{'WORLD CUP\n2026'}</h1>
+          <button
+            className={`${styles.liveChip} ${status === 'live' ? styles.liveChipOn : ''}`}
+            onClick={refresh}
+            title={lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : undefined}
+          >
+            <span className={`${styles.liveDot} ${status === 'live' ? styles.liveDotPulse : ''}`} />
+            {status === 'live' ? 'Live' : 'Retry'}
+          </button>
+        </div>
 
         <div className={styles.stats}>
           <div className={styles.statBlock}>
@@ -63,43 +75,43 @@ export default function App() {
             <span className={styles.statNum}>{matches.length - played}</span>
             <span className={styles.statLbl}>Games remain</span>
           </div>
+          <div className={styles.statDivider} />
+          <div className={styles.statBlock}>
+            <span className={styles.statNum}>{days}</span>
+            <span className={styles.statLbl}>Days left</span>
+          </div>
         </div>
-
-        <button
-          className={`${styles.liveChip} ${status === 'live' ? styles.liveChipOn : ''}`}
-          onClick={refresh}
-          title={lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : undefined}
-        >
-          <span className={`${styles.liveDot} ${status === 'live' ? styles.liveDotPulse : ''}`} />
-          {status === 'live' ? 'Live' : 'Retry'}
-        </button>
-      </header>
+      </header>}
 
       <main className={styles.main}>
         {tab === 'schedule' && (
-          <ScheduleView matches={matches} teams={teams} />
-        )}
-        {tab === 'groups' && (
-          <GroupsView standings={standings} teams={teams} activeGroups={activeGroups} />
+          <ScheduleView matches={matches} teams={teams} standings={standings} />
         )}
         {tab === 'teams' && (
           <TeamsView matches={matches} teams={teams} standings={standings} />
+        )}
+        {tab === 'standings' && (
+          <GroupsView standings={standings} teams={teams} activeGroups={activeGroups} />
         )}
       </main>
 
       <nav className={styles.nav}>
         <div className={styles.navPill}>
+          <div
+            className={styles.navHighlight}
+            style={{ transform: `translateX(${({ schedule: 0, teams: 117, standings: 232 } as const)[tab]}px)` }}
+          />
           {([
-            { id: 'schedule', icon: '📅', label: 'Schedule' },
-            { id: 'groups',   icon: '🏆', label: 'Groups' },
-            { id: 'teams',    icon: '🌍', label: 'Teams' },
-          ] as const).map(({ id, icon, label }) => (
+            { id: 'schedule',  img: tabSchedule,   label: 'Schedule' },
+            { id: 'teams',     img: tabTeams,       label: 'Teams' },
+            { id: 'standings', img: tabStandings,   label: 'Standings' },
+          ] as const).map(({ id, img, label }) => (
             <button
               key={id}
               className={`${styles.navBtn} ${tab === id ? styles.navBtnActive : ''}`}
               onClick={() => setTab(id)}
             >
-              <span className={styles.navIcon}>{icon}</span>
+              <img src={img} className={styles.navIcon} alt={label} />
               <span className={styles.navLabel}>{label}</span>
             </button>
           ))}
