@@ -115,7 +115,7 @@ export default function ScheduleView({ matches, teams }: Props) {
                       {m.homeScore !== null && m.awayScore !== null ? (
                         <div className={styles.score}>
                           <span className={styles.scoreNum}>{m.homeScore}</span>
-                          <span className={styles.scoreDash}> - </span>
+                          <span className={styles.scoreDash}>&nbsp;-&nbsp;</span>
                           <span className={styles.scoreNum}>{m.awayScore}</span>
                         </div>
                       ) : (
