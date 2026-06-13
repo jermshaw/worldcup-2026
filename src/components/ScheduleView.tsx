@@ -1,12 +1,33 @@
 import { useState, useMemo } from 'react';
 import type { Match, Team, Group } from '../data';
 import { GROUPS, formatMatchDate } from '../data';
+import { getTeamColor } from '../teamColors';
 import styles from './ScheduleView.module.css';
 
 interface Props {
   matches: Match[];
   teams: Map<string, Team>;
   onScoreUpdate: (matchId: string, home: number | null, away: number | null) => void;
+}
+
+function isToday(dateStr: string) {
+  return dateStr === new Date().toLocaleDateString('en-CA');
+}
+
+function isTomorrow(dateStr: string) {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return dateStr === tomorrow.toLocaleDateString('en-CA');
+}
+
+function dayLabel(dateStr: string): { primary: string; secondary: string } {
+  if (isToday(dateStr)) {
+    return { primary: 'Today', secondary: `- ${formatMatchDate(dateStr)}` };
+  }
+  if (isTomorrow(dateStr)) {
+    return { primary: 'Tomorrow', secondary: `- ${formatMatchDate(dateStr)}` };
+  }
+  return { primary: formatMatchDate(dateStr), secondary: '' };
 }
 
 export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
@@ -26,23 +47,21 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
     [teamList]
   );
 
-  const filtered = useMemo(() => {
-    return matches.filter(m => {
-      if (m.stage !== 'Group Stage') return false;
-      if (filterGroup !== 'All' && m.group !== filterGroup) return false;
-      if (filterTeam !== 'All' && m.homeTeamId !== filterTeam && m.awayTeamId !== filterTeam) return false;
-      return true;
-    });
-  }, [matches, filterGroup, filterTeam]);
+  const filtered = useMemo(() => matches.filter(m => {
+    if (m.stage !== 'Group Stage') return false;
+    if (filterGroup !== 'All' && m.group !== filterGroup) return false;
+    if (filterTeam !== 'All' && m.homeTeamId !== filterTeam && m.awayTeamId !== filterTeam) return false;
+    return true;
+  }), [matches, filterGroup, filterTeam]);
 
   const byDate = useMemo(() => {
-    const groups = new Map<string, Match[]>();
+    const map = new Map<string, Match[]>();
     for (const m of filtered) {
-      const existing = groups.get(m.date) ?? [];
-      existing.push(m);
-      groups.set(m.date, existing);
+      const arr = map.get(m.date) ?? [];
+      arr.push(m);
+      map.set(m.date, arr);
     }
-    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b));
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
   }, [filtered]);
 
   function startEdit(m: Match) {
@@ -62,7 +81,7 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
     setEditingId(null);
   }
 
-  function matchResult(m: Match): 'home' | 'away' | 'draw' | null {
+  function matchResult(m: Match) {
     if (m.homeScore === null || m.awayScore === null) return null;
     if (m.homeScore > m.awayScore) return 'home';
     if (m.homeScore < m.awayScore) return 'away';
@@ -71,82 +90,91 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
 
   return (
     <div className={styles.root}>
+      {/* Filters */}
       <div className={styles.filters}>
-        <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>Group</span>
-          <div className={styles.pills}>
+        <div className={styles.pills}>
+          <button
+            className={`${styles.pill} ${filterGroup === 'All' ? styles.pillActive : ''}`}
+            onClick={() => setFilterGroup('All')}
+          >All</button>
+          {activeGroups.map(g => (
             <button
-              className={`${styles.pill} ${filterGroup === 'All' ? styles.pillActive : ''}`}
-              onClick={() => setFilterGroup('All')}
-            >All</button>
-            {activeGroups.map(g => (
-              <button
-                key={g}
-                className={`${styles.pill} ${filterGroup === g ? styles.pillActive : ''}`}
-                onClick={() => setFilterGroup(g)}
-              >{g}</button>
-            ))}
-          </div>
+              key={g}
+              className={`${styles.pill} ${filterGroup === g ? styles.pillActive : ''}`}
+              onClick={() => setFilterGroup(g)}
+            >{g}</button>
+          ))}
         </div>
-        <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>Team</span>
-          <select
-            className={styles.select}
-            value={filterTeam}
-            onChange={e => setFilterTeam(e.target.value)}
-          >
-            <option value="All">All teams</option>
-            {teamList.map(t => (
-              <option key={t.id} value={t.id}>{t.flag} {t.name}</option>
-            ))}
-          </select>
-        </div>
+        <select
+          className={styles.select}
+          value={filterTeam}
+          onChange={e => setFilterTeam(e.target.value)}
+        >
+          <option value="All">All teams</option>
+          {teamList.map(t => (
+            <option key={t.id} value={t.id}>{t.flag} {t.name}</option>
+          ))}
+        </select>
       </div>
 
-      <div className={styles.matchCount}>{filtered.length} matches</div>
+      {/* Match list by day */}
+      {byDate.map(([date, dayMatches]) => {
+        const { primary, secondary } = dayLabel(date);
+        return (
+          <div key={date} className={styles.day}>
+            <div className={styles.dayHeader}>
+              <span className={styles.dayPrimary}>{primary}</span>
+              {secondary && <span className={styles.daySecondary}>{secondary}</span>}
+            </div>
 
-      {byDate.map(([date, dayMatches]) => (
-        <div key={date} className={styles.day}>
-          <div className={styles.dayHeader}>{formatMatchDate(date)}</div>
-          <div className={styles.matchList}>
-            {dayMatches.map(m => {
-              const home = teams.get(m.homeTeamId);
-              const away = teams.get(m.awayTeamId);
-              if (!home || !away) return null;
-              const result = matchResult(m);
-              const isEditing = editingId === m.id;
+            <div className={styles.matchList}>
+              {dayMatches.map(m => {
+                const home = teams.get(m.homeTeamId);
+                const away = teams.get(m.awayTeamId);
+                if (!home || !away) return null;
 
-              return (
-                <div key={m.id} className={`${styles.matchCard} ${result ? styles.played : ''}`}>
-                  <div className={styles.matchMeta}>
-                    <span className={styles.matchTime}>{m.time}</span>
-                    <span className={styles.groupBadge}>Group {m.group} · MD{m.matchday}</span>
-                    <span className={styles.venue}>{m.venue}</span>
-                  </div>
-                  <div className={styles.matchBody}>
-                    <div className={`${styles.teamSide} ${result === 'home' ? styles.winner : ''}`}>
+                const result = matchResult(m);
+                const homeDim = result === 'away';
+                const awayDim = result === 'home';
+                const isEditing = editingId === m.id;
+                const homeColor = getTeamColor(m.homeTeamId);
+                const awayColor = getTeamColor(m.awayTeamId);
+
+                return (
+                  <div key={m.id} className={styles.card}>
+                    {/* Home side */}
+                    <div
+                      className={`${styles.teamSide} ${styles.teamSideLeft} ${homeDim ? styles.teamSideDim : ''}`}
+                      style={{ background: homeColor }}
+                    >
                       <span className={styles.teamFlag}>{home.flag}</span>
                       <span className={styles.teamName}>{home.name}</span>
                     </div>
 
+                    {/* Away side */}
+                    <div
+                      className={`${styles.teamSide} ${styles.teamSideRight} ${awayDim ? styles.teamSideDim : ''}`}
+                      style={{ background: awayColor }}
+                    >
+                      <span className={styles.teamFlag}>{away.flag}</span>
+                      <span className={styles.teamName}>{away.name}</span>
+                    </div>
+
+                    {/* Center overlay */}
                     {isEditing ? (
-                      <div className={styles.scoreEdit}>
-                        <div>
+                      <div className={styles.overlay}>
+                        <div className={styles.editRow}>
                           <input
                             className={styles.scoreInput}
-                            type="number"
-                            min="0"
-                            max="30"
+                            type="number" min="0" max="30"
                             value={draftHome}
                             onChange={e => setDraftHome(e.target.value)}
                             autoFocus
                           />
-                          <span className={styles.scoreSep}>–</span>
+                          <span className={styles.editDash}>-</span>
                           <input
                             className={styles.scoreInput}
-                            type="number"
-                            min="0"
-                            max="30"
+                            type="number" min="0" max="30"
                             value={draftAway}
                             onChange={e => setDraftAway(e.target.value)}
                           />
@@ -157,30 +185,26 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
                         </div>
                       </div>
                     ) : (
-                      <button className={styles.scoreBox} onClick={() => startEdit(m)}>
+                      <button className={styles.overlay} onClick={() => startEdit(m)}>
                         {m.homeScore !== null && m.awayScore !== null ? (
-                          <>
-                            <span className={result === 'home' ? styles.winScore : ''}>{m.homeScore}</span>
-                            <span className={styles.scoreDash}>–</span>
-                            <span className={result === 'away' ? styles.winScore : ''}>{m.awayScore}</span>
-                          </>
+                          <div className={styles.score}>
+                            <span className={styles.scoreNum}>{m.homeScore}</span>
+                            <span className={styles.scoreDash}> - </span>
+                            <span className={styles.scoreNum}>{m.awayScore}</span>
+                          </div>
                         ) : (
-                          <span className={styles.vsLabel}>vs</span>
+                          <div className={styles.time}>{m.time}</div>
                         )}
+                        <div className={styles.groupLabel}>Group {m.group}</div>
                       </button>
                     )}
-
-                    <div className={`${styles.teamSide} ${styles.teamSideRight} ${result === 'away' ? styles.winner : ''}`}>
-                      <span className={styles.teamName}>{away.name}</span>
-                      <span className={styles.teamFlag}>{away.flag}</span>
-                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

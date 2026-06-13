@@ -2,127 +2,109 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
 }
 
-.loadingScreen {
-  min-height: 100vh;
+/* ── Header ──────────────────────────────────────────── */
+.header {
+  background: var(--bg-header);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-}
-
-.loadingBall {
-  font-size: 48px;
-  animation: spin 1.5s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.loadingText {
-  font-size: 16px;
-  color: var(--text-secondary);
-}
-
-.retryBtn {
-  padding: 8px 20px;
-  background: var(--accent);
-  color: #fff;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.header {
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 48px 24px 28px;
+  gap: 6px;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
-.headerInner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-}
-
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  margin-bottom: 4px;
 }
 
-.logoEmoji {
-  font-size: 32px;
+.title {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 25px;
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 70px;
+  margin-top: 18px;
+}
+
+.statBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.statNum {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 30px;
+  font-weight: 400;
+  color: #fff;
   line-height: 1;
 }
 
-.logoTitle {
-  font-size: 20px;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
+.statLbl {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
 }
 
-.logoSub {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 2px;
+.statDivider {
+  width: 1px;
+  height: 78px;
+  background: rgba(255,255,255,0.2);
 }
 
-.headerStats {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-}
-
-.liveBtn {
+.liveChip {
+  position: absolute;
+  top: 16px;
+  right: 16px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 5px;
+  padding: 5px 10px;
   border-radius: 99px;
-  border: 1px solid var(--border);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+  font-size: 11px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
+  color: rgba(255,255,255,0.5);
 }
-.liveBtn:hover {
-  border-color: var(--green);
-  color: var(--text-primary);
-}
-.liveBtnStatus_live {
-  border-color: var(--green);
-  color: var(--green);
-}
-.liveBtnStatus_error {
-  border-color: var(--red);
-  color: var(--red);
-}
-.liveBtnStatus_loading {
-  opacity: 0.7;
+.liveChipOn {
+  border-color: #3ecf6a;
+  color: #3ecf6a;
 }
 
 .liveDot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: currentColor;
   flex-shrink: 0;
 }
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
@@ -131,72 +113,107 @@
   animation: pulse 2s ease-in-out infinite;
 }
 
-.liveTime {
-  font-size: 10px;
-  opacity: 0.7;
-  margin-left: 2px;
+/* ── Main ────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  padding-bottom: 100px;
 }
 
-.headerStat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.headerStatVal {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.headerStatLbl {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
+/* ── Bottom nav ──────────────────────────────────────── */
 .nav {
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-subtle);
-  position: sticky;
-  top: 69px;
-  z-index: 9;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 354px;
+  max-width: calc(100vw - 40px);
+  z-index: 20;
 }
 
-.navInner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 24px;
+.navPill {
   display: flex;
-  gap: 0;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(22, 22, 26, 0.8);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-radius: 70px;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 10px 16px;
+  height: 65px;
 }
 
 .navBtn {
-  padding: 12px 20px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  border-bottom: 2px solid transparent;
-  transition: all 0.15s;
-  margin-bottom: -1px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 20px;
+  border-radius: 99px;
+  transition: background 0.15s;
 }
 .navBtn:hover {
-  color: var(--text-secondary);
+  background: rgba(255,255,255,0.06);
 }
 .navBtnActive {
-  color: var(--text-primary);
-  border-bottom-color: var(--accent);
+  background: rgba(255,255,255,0.1);
 }
 
-.main {
-  flex: 1;
+.navIcon {
+  font-size: 20px;
+  line-height: 1;
 }
 
-.content {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 24px 60px;
+.navLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+}
+.navBtnActive .navLabel {
+  color: #fff;
+}
+
+/* ── Splash / loading ────────────────────────────────── */
+.splash {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--bg-base);
+}
+
+.splashLogo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.splashTitle {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 22px;
+  color: #fff;
+}
+
+.splashSub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+}
+
+.retryBtn {
+  margin-top: 8px;
+  padding: 8px 20px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 99px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
