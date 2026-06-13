@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import type { Match, Team, Group } from '../data';
-import { GROUPS, formatMatchDate } from '../data';
+import type { Match, Team } from '../data';
+import { formatMatchDate } from '../data';
 import { getTeamColor } from '../teamColors';
 import styles from './ScheduleView.module.css';
 
@@ -31,28 +31,14 @@ function dayLabel(dateStr: string): { primary: string; secondary: string } {
 }
 
 export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
-  const [filterGroup, setFilterGroup] = useState<Group | 'All'>('All');
-  const [filterTeam, setFilterTeam] = useState('All');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftHome, setDraftHome] = useState('');
   const [draftAway, setDraftAway] = useState('');
 
-  const teamList = useMemo(
-    () => [...teams.values()].sort((a, b) => a.name.localeCompare(b.name)),
-    [teams]
+  const filtered = useMemo(
+    () => matches.filter(m => m.stage === 'Group Stage'),
+    [matches]
   );
-
-  const activeGroups = useMemo(
-    () => GROUPS.filter(g => teamList.some(t => t.group === g)),
-    [teamList]
-  );
-
-  const filtered = useMemo(() => matches.filter(m => {
-    if (m.stage !== 'Group Stage') return false;
-    if (filterGroup !== 'All' && m.group !== filterGroup) return false;
-    if (filterTeam !== 'All' && m.homeTeamId !== filterTeam && m.awayTeamId !== filterTeam) return false;
-    return true;
-  }), [matches, filterGroup, filterTeam]);
 
   const byDate = useMemo(() => {
     const map = new Map<string, Match[]>();
@@ -90,33 +76,6 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
 
   return (
     <div className={styles.root}>
-      {/* Filters */}
-      <div className={styles.filters}>
-        <div className={styles.pills}>
-          <button
-            className={`${styles.pill} ${filterGroup === 'All' ? styles.pillActive : ''}`}
-            onClick={() => setFilterGroup('All')}
-          >All</button>
-          {activeGroups.map(g => (
-            <button
-              key={g}
-              className={`${styles.pill} ${filterGroup === g ? styles.pillActive : ''}`}
-              onClick={() => setFilterGroup(g)}
-            >{g}</button>
-          ))}
-        </div>
-        <select
-          className={styles.select}
-          value={filterTeam}
-          onChange={e => setFilterTeam(e.target.value)}
-        >
-          <option value="All">All teams</option>
-          {teamList.map(t => (
-            <option key={t.id} value={t.id}>{t.flag} {t.name}</option>
-          ))}
-        </select>
-      </div>
-
       {/* Match list by day */}
       {byDate.map(([date, dayMatches]) => {
         const { primary, secondary } = dayLabel(date);

@@ -106,8 +106,12 @@
   font-size: 56px;
   line-height: 1;
   top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 14px;
+}
+
+.teamSideRight .teamFlag {
+  left: auto;
+  right: 14px;
 }
 
 .teamName {
