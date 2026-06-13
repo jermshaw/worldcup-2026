@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import type { Match, Team } from '../data';
 import { formatMatchDate } from '../data';
 import { getTeamColor } from '../teamColors';
@@ -7,7 +7,6 @@ import styles from './ScheduleView.module.css';
 interface Props {
   matches: Match[];
   teams: Map<string, Team>;
-  onScoreUpdate: (matchId: string, home: number | null, away: number | null) => void;
 }
 
 function isToday(dateStr: string) {
@@ -30,8 +29,7 @@ function dayLabel(dateStr: string): { primary: string; secondary: string } {
   return { primary: formatMatchDate(dateStr), secondary: '' };
 }
 
-export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
-  const [editingId, setEditingId] = useState<string | null>(null);
+export default function ScheduleView({ matches, teams }: Props) {
   const todayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,8 +40,6 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
       window.scrollTo({ top, behavior: 'instant' });
     }
   }, []);
-  const [draftHome, setDraftHome] = useState('');
-  const [draftAway, setDraftAway] = useState('');
 
   const filtered = useMemo(
     () => matches.filter(m => m.stage === 'Group Stage'),
@@ -60,23 +56,6 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
     return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
   }, [filtered]);
 
-  function startEdit(m: Match) {
-    setEditingId(m.id);
-    setDraftHome(m.homeScore !== null ? String(m.homeScore) : '');
-    setDraftAway(m.awayScore !== null ? String(m.awayScore) : '');
-  }
-
-  function commitEdit(matchId: string) {
-    const h = parseInt(draftHome, 10);
-    const a = parseInt(draftAway, 10);
-    if (!isNaN(h) && !isNaN(a) && h >= 0 && a >= 0) {
-      onScoreUpdate(matchId, h, a);
-    } else if (draftHome === '' && draftAway === '') {
-      onScoreUpdate(matchId, null, null);
-    }
-    setEditingId(null);
-  }
-
   function matchResult(m: Match) {
     if (m.homeScore === null || m.awayScore === null) return null;
     if (m.homeScore > m.awayScore) return 'home';
@@ -86,7 +65,6 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
 
   return (
     <div className={styles.root}>
-      {/* Match list by day */}
       {byDate.map(([date, dayMatches]) => {
         const { primary, secondary } = dayLabel(date);
         return (
@@ -105,7 +83,6 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
                 const result = matchResult(m);
                 const homeDim = result === 'away';
                 const awayDim = result === 'home';
-                const isEditing = editingId === m.id;
                 const homeColor = getTeamColor(m.homeTeamId);
                 const awayColor = getTeamColor(m.awayTeamId);
 
@@ -130,43 +107,18 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
                     </div>
 
                     {/* Center overlay */}
-                    {isEditing ? (
-                      <div className={styles.overlay}>
-                        <div className={styles.editRow}>
-                          <input
-                            className={styles.scoreInput}
-                            type="number" min="0" max="30"
-                            value={draftHome}
-                            onChange={e => setDraftHome(e.target.value)}
-                            autoFocus
-                          />
-                          <span className={styles.editDash}>-</span>
-                          <input
-                            className={styles.scoreInput}
-                            type="number" min="0" max="30"
-                            value={draftAway}
-                            onChange={e => setDraftAway(e.target.value)}
-                          />
+                    <div className={styles.overlay}>
+                      {m.homeScore !== null && m.awayScore !== null ? (
+                        <div className={styles.score}>
+                          <span className={styles.scoreNum}>{m.homeScore}</span>
+                          <span className={styles.scoreDash}> - </span>
+                          <span className={styles.scoreNum}>{m.awayScore}</span>
                         </div>
-                        <div className={styles.editActions}>
-                          <button className={styles.saveBtn} onClick={() => commitEdit(m.id)}>✓</button>
-                          <button className={styles.cancelBtn} onClick={() => setEditingId(null)}>✕</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button className={styles.overlay} onClick={() => startEdit(m)}>
-                        {m.homeScore !== null && m.awayScore !== null ? (
-                          <div className={styles.score}>
-                            <span className={styles.scoreNum}>{m.homeScore}</span>
-                            <span className={styles.scoreDash}> - </span>
-                            <span className={styles.scoreNum}>{m.awayScore}</span>
-                          </div>
-                        ) : (
-                          <div className={styles.time}>{m.time}</div>
-                        )}
-                        <div className={styles.groupLabel}>Group {m.group}</div>
-                      </button>
-                    )}
+                      ) : (
+                        <div className={styles.time}>{m.time}</div>
+                      )}
+                      <div className={styles.groupLabel}>Group {m.group}</div>
+                    </div>
                   </div>
                 );
               })}

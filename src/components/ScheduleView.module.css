@@ -147,8 +147,6 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  border: none;
-  cursor: pointer;
   z-index: 2;
 }
 
@@ -186,46 +184,3 @@
   color: rgba(255,255,255,0.6);
 }
 
-/* ── Score edit ──────────────────────────────────────── */
-.editRow {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.scoreInput {
-  width: 32px;
-  text-align: center;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid rgba(255,255,255,0.4);
-  color: #fff;
-  font-family: 'Dela Gothic One', sans-serif;
-  font-size: 18px;
-  outline: none;
-  -moz-appearance: textfield;
-}
-.scoreInput::-webkit-outer-spin-button,
-.scoreInput::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-.editDash {
-  font-family: 'Dela Gothic One', sans-serif;
-  font-size: 18px;
-  color: #717171;
-  margin: 0 2px;
-}
-
-.editActions {
-  display: flex;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.saveBtn, .cancelBtn {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-}
-.saveBtn { background: #3ecf6a; color: #000; }
-.cancelBtn { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }

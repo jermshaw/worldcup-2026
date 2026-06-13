@@ -19,7 +19,7 @@ function daysUntilFinal() {
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('schedule');
-  const { matches, teams, status, lastUpdated, refresh, updateScore } = useLiveScores();
+  const { matches, teams, status, lastUpdated, refresh } = useLiveScores();
 
   const standings = useMemo(() => computeStandings(matches, teams), [matches, teams]);
   const activeGroups = useMemo(() => GROUPS.filter(g => standings.has(g)), [standings]);
@@ -77,7 +77,7 @@ export default function App() {
 
       <main className={styles.main}>
         {tab === 'schedule' && (
-          <ScheduleView matches={matches} teams={teams} onScoreUpdate={updateScore} />
+          <ScheduleView matches={matches} teams={teams} />
         )}
         {tab === 'groups' && (
           <GroupsView standings={standings} teams={teams} activeGroups={activeGroups} />
