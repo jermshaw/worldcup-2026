@@ -45,7 +45,7 @@ export const FLAG_MAP: Record<string, string> = {
   SVK: '🇸🇰', CZE: '🇨🇿', SVN: '🇸🇮', GRE: '🇬🇷',
   SCO: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', WAL: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', IRL: '🇮🇪', ISL: '🇮🇸',
   CRC: '🇨🇷', HON: '🇭🇳', JAM: '🇯🇲', TRI: '🇹🇹',
-  HAI: '🇭🇹',
+  HAI: '🇭🇹', CUW: '🇨🇼',
   BOL: '🇧🇴', PAR: '🇵🇾', URY: '🇺🇾',
   ALG: '🇩🇿', AUT: '🇦🇹', BIH: '🇧🇦',
   CIV: '🇨🇮', COD: '🇨🇩', EQG: '🇬🇶',
