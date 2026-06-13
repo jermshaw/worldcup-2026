@@ -93,7 +93,9 @@ export default function ScheduleView({ matches, teams }: Props) {
                       className={`${styles.teamSide} ${styles.teamSideLeft} ${homeDim ? styles.teamSideDim : ''}`}
                       style={{ background: homeColor }}
                     >
-                      <span className={styles.teamFlag}>{home.flag}</span>
+                      {home.crest
+                        ? <img src={home.crest} className={styles.teamFlagImg} alt={home.name} />
+                        : <span className={styles.teamFlag}>{home.flag}</span>}
                       <span className={styles.teamName}>{home.name}</span>
                     </div>
 
@@ -102,7 +104,9 @@ export default function ScheduleView({ matches, teams }: Props) {
                       className={`${styles.teamSide} ${styles.teamSideRight} ${awayDim ? styles.teamSideDim : ''}`}
                       style={{ background: awayColor }}
                     >
-                      <span className={styles.teamFlag}>{away.flag}</span>
+                      {away.crest
+                        ? <img src={away.crest} className={styles.teamFlagImg} alt={away.name} />
+                        : <span className={styles.teamFlag}>{away.flag}</span>}
                       <span className={styles.teamName}>{away.name}</span>
                     </div>
 

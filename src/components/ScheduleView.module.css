@@ -109,7 +109,21 @@
   left: 14px;
 }
 
+.teamFlagImg {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  top: 12px;
+  left: 14px;
+  object-fit: contain;
+}
+
 .teamSideRight .teamFlag {
+  left: auto;
+  right: 14px;
+}
+
+.teamSideRight .teamFlagImg {
   left: auto;
   right: 14px;
 }

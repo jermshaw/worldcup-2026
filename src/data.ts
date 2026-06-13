@@ -7,6 +7,7 @@ export interface Team {
   id: string; // TLA e.g. "USA"
   name: string;
   flag: string;
+  crest?: string; // fallback image URL when flag emoji is unsupported
   group: Group;
   confederation: string;
 }
@@ -74,10 +75,12 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
     // Register teams (use group from first group stage match we see them in)
     for (const apiTeam of [m.homeTeam, m.awayTeam]) {
       if (!teamMap.has(apiTeam.tla) && group) {
+        const hasEmoji = !!FLAG_MAP[apiTeam.tla];
         teamMap.set(apiTeam.tla, {
           id: apiTeam.tla,
           name: apiTeam.shortName || apiTeam.name,
           flag: FLAG_MAP[apiTeam.tla] ?? '🏳️',
+          crest: hasEmoji ? undefined : apiTeam.crest,
           group,
           confederation: CONF_MAP[apiTeam.tla] ?? '',
         });
