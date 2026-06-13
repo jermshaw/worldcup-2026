@@ -89,7 +89,7 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
     const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
     const timeStr = date.toLocaleTimeString('en-US', {
       hour: 'numeric',
-      minute: '2-digit',
+      ...(date.getMinutes() !== 0 ? { minute: '2-digit' } : {}),
       hour12: true,
     });
 
