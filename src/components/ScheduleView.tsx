@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Match, Team } from '../data';
 import { formatMatchDate } from '../data';
 import { getTeamColor } from '../teamColors';
@@ -32,6 +32,16 @@ function dayLabel(dateStr: string): { primary: string; secondary: string } {
 
 export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const todayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (todayRef.current) {
+      const header = document.querySelector('header');
+      const headerHeight = header ? header.getBoundingClientRect().height : 0;
+      const top = todayRef.current.getBoundingClientRect().top + window.scrollY - headerHeight - 16;
+      window.scrollTo({ top, behavior: 'instant' });
+    }
+  }, []);
   const [draftHome, setDraftHome] = useState('');
   const [draftAway, setDraftAway] = useState('');
 
@@ -80,7 +90,7 @@ export default function ScheduleView({ matches, teams, onScoreUpdate }: Props) {
       {byDate.map(([date, dayMatches]) => {
         const { primary, secondary } = dayLabel(date);
         return (
-          <div key={date} className={styles.day}>
+          <div key={date} className={styles.day} ref={isToday(date) ? todayRef : undefined}>
             <div className={styles.dayHeader}>
               <span className={styles.dayPrimary}>{primary}</span>
               {secondary && <span className={styles.daySecondary}>{secondary}</span>}
