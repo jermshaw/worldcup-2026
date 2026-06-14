@@ -44,9 +44,21 @@ export default function WavingFlag({ teamId }: { teamId: string }) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // HiDPI fix: render at physical pixel density, display at CSS size
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const physW = W * dpr;
+    const physH = H * dpr;
+    const physCanvasH = CANVAS_H * dpr;
+    const physAmp = AMPLITUDE * dpr;
+
+    canvas.width = physW;
+    canvas.height = physCanvasH;
+    canvas.style.width = `${W}px`;
+    canvas.style.height = `${CANVAS_H}px`;
+
     const off = document.createElement('canvas');
-    off.width = W;
-    off.height = H;
+    off.width = physW;
+    off.height = physH;
     const oCtx = off.getContext('2d')!;
 
     const img = new Image();
@@ -56,28 +68,29 @@ export default function WavingFlag({ teamId }: { teamId: string }) {
     let rafId: number;
 
     function drawFrame() {
-      ctx!.clearRect(0, 0, W, CANVAS_H);
+      ctx!.clearRect(0, 0, physW, physCanvasH);
       for (let x = 0; x < W; x++) {
-        const yOffset = Math.sin((x + time) / FREQUENCY) * AMPLITUDE;
-        ctx!.drawImage(off, x, 0, 1, H, x, yOffset + AMPLITUDE, 1, H);
+        const yOffset = Math.sin((x + time) / FREQUENCY) * physAmp;
+        const px = x * dpr;
+        ctx!.drawImage(off, px, 0, dpr, physH, px, yOffset + physAmp, dpr, physH);
         const slope = Math.cos((x + time) / FREQUENCY);
         const alpha = Math.abs(slope) * 0.18;
         ctx!.fillStyle = slope > 0
           ? `rgba(255,255,255,${alpha})`
           : `rgba(0,0,0,${alpha})`;
-        ctx!.fillRect(x, yOffset + AMPLITUDE, 1, H);
+        ctx!.fillRect(px, yOffset + physAmp, dpr, physH);
       }
       time -= 1;
       rafId = requestAnimationFrame(drawFrame);
     }
 
     img.onload = () => {
-      oCtx.drawImage(img, 0, 0, W, H);
+      oCtx.drawImage(img, 0, 0, physW, physH);
       rafId = requestAnimationFrame(drawFrame);
     };
 
     return () => cancelAnimationFrame(rafId);
   }, [teamId]);
 
-  return <canvas ref={canvasRef} width={W} height={CANVAS_H} className={styles.flag} />;
+  return <canvas ref={canvasRef} className={styles.flag} />;
 }
