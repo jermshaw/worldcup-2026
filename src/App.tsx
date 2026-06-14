@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { computeStandings, GROUPS } from './data';
+import { computeStandings } from './data';
 import { useLiveScores } from './useLiveScores';
 import ScheduleView from './components/ScheduleView';
-import GroupsView from './components/GroupsView';
+import BracketView from './components/BracketView';
 import TeamsView from './components/TeamsView';
 import styles from './App.module.css';
 import tabSchedule from './assets/nav/tab-schedule.png';
@@ -25,7 +25,6 @@ export default function App() {
   const { matches, teams, status, lastUpdated, refresh } = useLiveScores();
 
   const standings = useMemo(() => computeStandings(matches, teams), [matches, teams]);
-  const activeGroups = useMemo(() => GROUPS.filter(g => standings.has(g)), [standings]);
   const played = matches.filter(m => m.homeScore !== null).length;
   const days = daysUntilFinal();
 
@@ -91,7 +90,7 @@ export default function App() {
           <TeamsView matches={matches} teams={teams} standings={standings} />
         )}
         {tab === 'standings' && (
-          <GroupsView standings={standings} teams={teams} activeGroups={activeGroups} />
+          <BracketView matches={matches} teams={teams} />
         )}
       </main>
 

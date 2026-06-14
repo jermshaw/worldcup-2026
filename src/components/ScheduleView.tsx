@@ -83,6 +83,10 @@ export default function ScheduleView({ matches, teams, standings }: Props) {
     return 'draw';
   }
 
+  function isLive(m: Match) {
+    return m.status === 'IN_PLAY' || m.status === 'PAUSED';
+  }
+
   return (
     <>
     <div className={styles.root}>
@@ -107,8 +111,10 @@ export default function ScheduleView({ matches, teams, standings }: Props) {
                 const homeColor = getTeamColor(m.homeTeamId);
                 const awayColor = getTeamColor(m.awayTeamId);
 
+                const live = isLive(m);
+
                 return (
-                  <div key={m.id} className={styles.card}>
+                  <div key={m.id} className={`${styles.card} ${live ? styles.cardLive : ''}`}>
                     {/* Home side */}
                     <button
                       className={`${styles.teamSide} ${styles.teamSideLeft} ${homeDim ? styles.teamSideDim : ''}`}
@@ -134,7 +140,13 @@ export default function ScheduleView({ matches, teams, standings }: Props) {
                     </button>
 
                     {/* Center overlay */}
-                    <div className={styles.overlay}>
+                    <div className={`${styles.overlay} ${live ? styles.overlayLive : ''}`}>
+                      {live && (
+                        <div className={styles.liveBadge}>
+                          <span className={styles.liveDot} />
+                          <span className={styles.liveText}>LIVE</span>
+                        </div>
+                      )}
                       {m.homeScore !== null && m.awayScore !== null ? (
                         <div className={styles.score}>
                           <span className={styles.scoreNum}>{m.homeScore}</span>

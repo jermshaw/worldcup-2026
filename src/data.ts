@@ -96,7 +96,7 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
       hour12: true,
     });
 
-    const finished = m.status === 'FINISHED';
+    const hasScore = m.status === 'FINISHED' || m.status === 'IN_PLAY' || m.status === 'PAUSED';
 
     matches.push({
       id: `api-${m.id}`,
@@ -109,8 +109,8 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
       homeTeamId: m.homeTeam.tla,
       awayTeamId: m.awayTeam.tla,
       venue: m.venue ?? '',
-      homeScore: finished ? (m.score.fullTime.home ?? null) : null,
-      awayScore: finished ? (m.score.fullTime.away ?? null) : null,
+      homeScore: hasScore ? (m.score.fullTime.home ?? null) : null,
+      awayScore: hasScore ? (m.score.fullTime.away ?? null) : null,
       status: m.status,
     });
   }
