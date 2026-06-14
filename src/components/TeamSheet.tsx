@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import type { Match, Team, StandingRow } from '../data';
 import { formatMatchDate } from '../data';
 import { getTeamColor } from '../teamColors';
@@ -39,6 +40,40 @@ function matchResult(m: Match) {
 
 export default function TeamSheet({ team, row, groupPosition, matches, teams, onClose }: Props) {
   const teamColor = getTeamColor(team.id);
+  const [dragY, setDragY] = useState(0);
+  const [dismissing, setDismissing] = useState(false);
+  const dragging = useRef(false);
+  const startY = useRef(0);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  function dismiss() {
+    setDismissing(true);
+    setDragY(window.innerHeight);
+    setTimeout(onClose, 320);
+  }
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if ((sheetRef.current?.scrollTop ?? 0) > 0) return;
+    dragging.current = true;
+    startY.current = e.clientY;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!dragging.current) return;
+    const delta = Math.max(0, e.clientY - startY.current);
+    setDragY(delta);
+  }
+
+  function onPointerUp() {
+    if (!dragging.current) return;
+    dragging.current = false;
+    if (dragY > 120) {
+      dismiss();
+    } else {
+      setDragY(0);
+    }
+  }
 
   const teamMatches = matches.filter(
     m => m.stage === 'Group Stage' && (m.homeTeamId === team.id || m.awayTeamId === team.id)
@@ -53,12 +88,29 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
   const dateGroups = [...byDate.entries()].sort(([a], [b]) => a.localeCompare(b));
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+    <div
+      className={`${styles.overlay} ${dismissing ? styles.overlayOut : ''}`}
+      onClick={dismiss}
+    >
+      <div
+        ref={sheetRef}
+        className={styles.sheet}
+        style={{
+          background: teamColor,
+          transform: `translateY(${dragY}px)`,
+          transition: dragging.current ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+        }}
+        onClick={e => e.stopPropagation()}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        {/* Drag handle */}
+        <div className={styles.dragHandle} />
 
         {/* Header */}
-        <div className={styles.header} style={{ background: teamColor }}>
-          <button className={styles.closeBtn} onClick={onClose}>×</button>
+        <div className={styles.header}>
           <div className={styles.headerContent}>
             <WavingFlag teamId={team.id} />
             <h2 className={styles.teamName}>{team.name}</h2>
@@ -74,9 +126,6 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
             <StatBlock label="Draws" value={row?.d ?? 0} dim={(row?.d ?? 0) === 0} />
           </div>
         </div>
-
-        {/* Separator */}
-        <div className={styles.separator} />
 
         {/* Matches */}
         <div className={styles.body}>
