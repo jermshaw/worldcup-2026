@@ -132,6 +132,7 @@ export function computeStandings(
 
   for (const m of matches) {
     if (m.stage !== 'Group Stage' || !m.group) continue;
+    if (m.status !== 'FINISHED') continue;
     if (m.homeScore === null || m.awayScore === null) continue;
 
     const groupRows = standings.get(m.group);

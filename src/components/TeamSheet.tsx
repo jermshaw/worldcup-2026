@@ -38,6 +38,10 @@ function matchResult(m: Match) {
   return 'draw';
 }
 
+function isLive(m: Match) {
+  return m.status === 'IN_PLAY' || m.status === 'PAUSED';
+}
+
 export default function TeamSheet({ team, row, groupPosition, matches, teams, onClose }: Props) {
   const teamColor = getTeamColor(team.id);
   const [dragY, setDragY] = useState(0);
@@ -45,6 +49,7 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
   const dragging = useRef(false);
   const startY = useRef(0);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   function dismiss() {
     setDismissing(true);
@@ -53,7 +58,7 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
   }
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    if ((sheetRef.current?.scrollTop ?? 0) > 0) return;
+    if ((bodyRef.current?.scrollTop ?? 0) > 0) return;
     dragging.current = true;
     startY.current = e.clientY;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -128,7 +133,7 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
         </div>
 
         {/* Matches */}
-        <div className={styles.body}>
+        <div ref={bodyRef} className={styles.body}>
           {dateGroups.length === 0 && (
             <p className={styles.empty}>No matches found</p>
           )}
@@ -150,9 +155,10 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
                   const awayDim = result === 'home';
                   const homeColor = getTeamColor(m.homeTeamId);
                   const awayColor = getTeamColor(m.awayTeamId);
+                  const live = isLive(m);
 
                   return (
-                    <div key={m.id} className={cardStyles.card}>
+                    <div key={m.id} className={`${cardStyles.card} ${live ? cardStyles.cardLive : ''}`}>
                       <div
                         className={`${cardStyles.teamSide} ${cardStyles.teamSideLeft} ${homeDim ? cardStyles.teamSideDim : ''}`}
                         style={{ background: homeColor }}
@@ -171,7 +177,13 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
                           : <span className={cardStyles.teamFlag}>{away.flag}</span>}
                         <span className={cardStyles.teamName}>{away.name}</span>
                       </div>
-                      <div className={cardStyles.overlay}>
+                      <div className={`${cardStyles.overlay} ${live ? cardStyles.overlayLive : ''}`}>
+                        {live && (
+                          <div className={cardStyles.liveBadge}>
+                            <span className={cardStyles.liveDot} />
+                            <span className={cardStyles.liveText}>LIVE</span>
+                          </div>
+                        )}
                         {m.homeScore !== null && m.awayScore !== null ? (
                           <div className={cardStyles.score}>
                             <span className={cardStyles.scoreNum}>{m.homeScore}</span>
