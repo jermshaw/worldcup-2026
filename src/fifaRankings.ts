@@ -1,0 +1,21 @@
+// FIFA/Coca-Cola Men's World Ranking — June 2026
+export const FIFA_RANKINGS: Record<string, number> = {
+  ARG: 1,   FRA: 2,   ESP: 3,   ENG: 4,   POR: 5,
+  BRA: 6,   MAR: 7,   NED: 8,   GER: 9,   BEL: 10,
+  CRO: 11,  ITA: 12,  MEX: 13,  COL: 14,  USA: 15,
+  SEN: 16,  URU: 17,  JPN: 18,  SUI: 19,  IRN: 20,
+  DEN: 21,  KOR: 22,  AUS: 23,  AUT: 24,  NGA: 25,
+  TUR: 26,  ALG: 27,  ECU: 28,  CIV: 29,  EGY: 30,
+  NOR: 31,  CAN: 32,  UKR: 33,  PAN: 34,  SWE: 35,
+  POL: 37,  SCO: 38,  WAL: 39,  HUN: 40,  SRB: 41,
+  PAR: 42,  CZE: 43,  CMR: 44,  COD: 45,  SVK: 46,
+  GRE: 47,  VEN: 48,  QAT: 49,  UZB: 50,  CHI: 51,
+  PER: 52,  CRC: 53,  ROU: 54,  TUN: 56,  IRQ: 57,
+  IRL: 58,  SVN: 59,  KSA: 60,  RSA: 61,  BIH: 63,
+  CPV: 64,  JOR: 65,  HON: 66,  ALB: 67,  UAE: 68,
+  JAM: 71,  GHA: 73,  ISL: 74,  BOL: 77,  CUW: 82,
+  HAI: 84,  NZL: 85,  GAB: 86,  ANG: 88,  CHN: 91,
+  THA: 94,  TRI: 102, MOZ: 103, EQG: 105, TAN: 112,
+  IDN: 118, SLE: 122, ZIM: 130, KUW: 133, PHI: 135,
+  IND: 138, TKM: 141, YEM: 145,
+};

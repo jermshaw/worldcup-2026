@@ -9,6 +9,8 @@ export const TEAM_COLORS: Record<string, string> = {
   HON: '#0073cf',
   JAM: '#000000',
   TRI: '#ce1126',
+  HAI: '#00209f',
+  CUW: '#002b7f',
 
   // CONMEBOL
   ARG: '#74acdf',
@@ -51,6 +53,8 @@ export const TEAM_COLORS: Record<string, string> = {
   WAL: '#c8102e',
   IRL: '#169b62',
   ISL: '#003897',
+  AUT: '#ed2939',
+  BIH: '#002395',
 
   // CAF
   MAR: '#c1272d',
@@ -64,6 +68,8 @@ export const TEAM_COLORS: Record<string, string> = {
   RSA: '#007a4d',
   CIV: '#f77f00',
   COD: '#007fff',
+  ALG: '#006233',
+  CPV: '#003893',
 
   // AFC
   JPN: '#bc002d',
@@ -76,6 +82,7 @@ export const TEAM_COLORS: Record<string, string> = {
   IRQ: '#ce1126',
   JOR: '#007a3d',
   QAT: '#8d1b3d',
+  UZB: '#1eb53a',
 
   // OFC
   NZL: '#000000',

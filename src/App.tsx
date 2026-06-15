@@ -1,17 +1,21 @@
 import { useMemo, useState } from 'react';
+import { getWcScorerMap } from './components/MatchSheet';
+
+getWcScorerMap();
 import { computeStandings } from './data';
 import { useLiveScores } from './useLiveScores';
 import ScheduleView from './components/ScheduleView';
-import BracketView from './components/BracketView';
+import StandingsView from './components/StandingsView';
 import TeamsView from './components/TeamsView';
 import styles from './App.module.css';
 import tabSchedule from './assets/nav/tab-schedule.png';
 import tabTeams from './assets/nav/tab-teams.png';
 import tabStandings from './assets/nav/tab-standings.png';
+import wcBall from './assets/nav/Ball.png';
 
 type Tab = 'schedule' | 'teams' | 'standings';
 
-const WC_LOGO = 'https://www.figma.com/api/mcp/asset/23df7400-0e77-4372-860f-065ebc722074';
+const WC_LOGO = wcBall;
 const FINAL_DATE = new Date('2026-07-19');
 
 function daysUntilFinal() {
@@ -22,7 +26,7 @@ function daysUntilFinal() {
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('schedule');
-  const { matches, teams, status, lastUpdated, refresh } = useLiveScores();
+  const { matches, teams, status, refresh } = useLiveScores();
 
   const standings = useMemo(() => computeStandings(matches, teams), [matches, teams]);
   const played = matches.filter(m => m.homeScore !== null).length;
@@ -50,18 +54,10 @@ export default function App() {
 
   return (
     <div className={styles.app}>
-      {tab !== 'teams' && <header className={styles.header}>
+      {tab !== 'teams' && tab !== 'standings' && <header className={styles.header}>
         <div className={styles.headerTop}>
           <img src={WC_LOGO} alt="World Cup 2026" className={styles.logo} />
-          <h1 className={styles.title}>{'WORLD CUP\n2026'}</h1>
-          <button
-            className={`${styles.liveChip} ${status === 'live' ? styles.liveChipOn : ''}`}
-            onClick={refresh}
-            title={lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : undefined}
-          >
-            <span className={`${styles.liveDot} ${status === 'live' ? styles.liveDotPulse : ''}`} />
-            {status === 'live' ? 'Live' : 'Retry'}
-          </button>
+          <h1 className={styles.title}>{'WORLD CUP\n'}<span className={styles.titleYear}>2026</span></h1>
         </div>
 
         <div className={styles.stats}>
@@ -90,7 +86,7 @@ export default function App() {
           <TeamsView matches={matches} teams={teams} standings={standings} />
         )}
         {tab === 'standings' && (
-          <BracketView matches={matches} teams={teams} />
+          <StandingsView matches={matches} teams={teams} standings={standings} />
         )}
       </main>
 

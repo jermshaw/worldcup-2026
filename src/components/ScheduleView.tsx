@@ -1,8 +1,9 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
 import type { Match, Team, Group, StandingRow } from '../data';
-import { formatMatchDate } from '../data';
+import { formatMatchDate, isLive } from '../data';
 import { getTeamColor } from '../teamColors';
 import TeamSheet from './TeamSheet';
+import MatchSheet from './MatchSheet';
 import styles from './ScheduleView.module.css';
 
 interface Props {
@@ -34,6 +35,7 @@ function dayLabel(dateStr: string): { primary: string; secondary: string } {
 export default function ScheduleView({ matches, teams, standings }: Props) {
   const todayRef = useRef<HTMLDivElement>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
 
   const teamStandings = useMemo(() => {
     const map = new Map<string, StandingRow>();
@@ -44,6 +46,7 @@ export default function ScheduleView({ matches, teams, standings }: Props) {
   }, [standings]);
 
   const selectedTeam = selectedTeamId ? teams.get(selectedTeamId) : undefined;
+  const selectedMatch = selectedMatchId ? matches.find(m => m.id === selectedMatchId) : undefined;
   const selectedRow = selectedTeamId ? teamStandings.get(selectedTeamId) : undefined;
   const selectedPosition = useMemo(() => {
     if (!selectedTeam) return 1;
@@ -81,10 +84,6 @@ export default function ScheduleView({ matches, teams, standings }: Props) {
     if (m.homeScore > m.awayScore) return 'home';
     if (m.homeScore < m.awayScore) return 'away';
     return 'draw';
-  }
-
-  function isLive(m: Match) {
-    return m.status === 'IN_PLAY' || m.status === 'PAUSED';
   }
 
   return (
@@ -139,8 +138,11 @@ export default function ScheduleView({ matches, teams, standings }: Props) {
                       <span className={styles.teamName}>{away.name}</span>
                     </button>
 
-                    {/* Center overlay */}
-                    <div className={`${styles.overlay} ${live ? styles.overlayLive : ''}`}>
+                    {/* Center overlay — tap to open match detail */}
+                    <button
+                      className={`${styles.overlay} ${live ? styles.overlayLive : ''}`}
+                      onClick={() => setSelectedMatchId(m.id)}
+                    >
                       {live && (
                         <div className={styles.liveBadge}>
                           <span className={styles.liveDot} />
@@ -157,7 +159,7 @@ export default function ScheduleView({ matches, teams, standings }: Props) {
                         <div className={styles.time}>{m.time}</div>
                       )}
                       <div className={styles.groupLabel}>Group {m.group}</div>
-                    </div>
+                    </button>
                   </div>
                 );
               })}
@@ -175,6 +177,14 @@ export default function ScheduleView({ matches, teams, standings }: Props) {
           matches={matches}
           teams={teams}
           onClose={() => setSelectedTeamId(null)}
+        />
+      )}
+
+      {selectedMatch && (
+        <MatchSheet
+          match={selectedMatch}
+          teams={teams}
+          onClose={() => setSelectedMatchId(null)}
         />
       )}
     </>

@@ -1,8 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Match, Team, StandingRow } from '../data';
-import { formatMatchDate } from '../data';
+import { formatMatchDate, isLive } from '../data';
 import { getTeamColor } from '../teamColors';
+import { FIFA_RANKINGS } from '../fifaRankings';
 import WavingFlag from './WavingFlag';
+import MatchSheet from './MatchSheet';
 import cardStyles from './ScheduleView.module.css';
 import styles from './TeamSheet.module.css';
 
@@ -38,16 +40,27 @@ function matchResult(m: Match) {
   return 'draw';
 }
 
-function isLive(m: Match) {
-  return m.status === 'IN_PLAY' || m.status === 'PAUSED';
-}
 
 export default function TeamSheet({ team, row, groupPosition, matches, teams, onClose }: Props) {
   const teamColor = getTeamColor(team.id);
   const [dragY, setDragY] = useState(0);
   const [dismissing, setDismissing] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [squad, setSquad] = useState<{ id: number; name: string; position: string | null; dateOfBirth: string | null }[]>([]);
+  const [coach, setCoach] = useState<string | null>(null);
   const dragging = useRef(false);
   const startY = useRef(0);
+
+  useEffect(() => {
+    fetch('/.netlify/functions/squads')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.[team.id]) return;
+        setCoach(data[team.id].coach);
+        setSquad(data[team.id].squad);
+      })
+      .catch(() => null);
+  }, [team.id]);
   const sheetRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -93,6 +106,7 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
   const dateGroups = [...byDate.entries()].sort(([a], [b]) => a.localeCompare(b));
 
   return (
+    <>
     <div
       className={`${styles.overlay} ${dismissing ? styles.overlayOut : ''}`}
       onClick={dismiss}
@@ -119,6 +133,9 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
           <div className={styles.headerContent}>
             <WavingFlag teamId={team.id} />
             <h2 className={styles.teamName}>{team.name}</h2>
+            {FIFA_RANKINGS[team.id] && (
+              <p className={styles.teamRank}>Ranked {FIFA_RANKINGS[team.id]} in the world</p>
+            )}
             <p className={styles.teamSub}>Group {team.group} · Position {groupPosition}</p>
           </div>
           <div className={styles.statsRow}>
@@ -177,7 +194,10 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
                           : <span className={cardStyles.teamFlag}>{away.flag}</span>}
                         <span className={cardStyles.teamName}>{away.name}</span>
                       </div>
-                      <div className={`${cardStyles.overlay} ${live ? cardStyles.overlayLive : ''}`}>
+                      <button
+                        className={`${cardStyles.overlay} ${live ? cardStyles.overlayLive : ''}`}
+                        onClick={() => setSelectedMatch(m)}
+                      >
                         {live && (
                           <div className={cardStyles.liveBadge}>
                             <span className={cardStyles.liveDot} />
@@ -194,16 +214,51 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
                           <div className={cardStyles.time}>{m.time}</div>
                         )}
                         <div className={cardStyles.groupLabel}>Group {m.group}</div>
-                      </div>
+                      </button>
                     </div>
                   );
                 })}
               </div>
             );
           })}
+
+          {squad.length > 0 && (
+            <div className={styles.squadCard}>
+              <p className={styles.squadTitle}>Squad</p>
+              {coach && <p className={styles.squadCoach}>Coach: {coach}</p>}
+              {(['Goalkeeper', 'Defender', 'Midfielder', 'Offence'] as const).map(pos => {
+                const players = squad.filter(p => p.position === pos);
+                if (!players.length) return null;
+                return (
+                  <div key={pos} className={styles.squadGroup}>
+                    <p className={styles.squadPos}>{pos}s</p>
+                    {players.map(p => (
+                      <div key={p.id} className={styles.squadRow}>
+                        <span className={styles.squadName}>{p.name}</span>
+                        {p.dateOfBirth && (
+                          <span className={styles.squadDob}>
+                            {new Date().getFullYear() - new Date(p.dateOfBirth).getFullYear()}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
+
+    {selectedMatch && (
+      <MatchSheet
+        match={selectedMatch}
+        teams={teams}
+        onClose={() => setSelectedMatch(null)}
+      />
+    )}
+    </>
   );
 }
 

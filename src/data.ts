@@ -18,14 +18,23 @@ export interface Match {
   stage: string;
   group?: Group;
   matchday?: number;
+  matchNumber?: number;
   date: string;
   time: string;
+  utcDate: string;
   homeTeamId: string;
   awayTeamId: string;
   venue: string;
   homeScore: number | null;
   awayScore: number | null;
   status: string;
+}
+
+export function isLive(m: Match): boolean {
+  if (m.status !== 'IN_PLAY' && m.status !== 'PAUSED') return false;
+  // Guard against stuck API status — no match runs longer than 3 hours
+  const minsSinceKickoff = (Date.now() - new Date(m.utcDate).getTime()) / 60_000;
+  return minsSinceKickoff < 180;
 }
 
 export interface StandingRow {
@@ -106,6 +115,7 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
       matchday: m.matchday ?? undefined,
       date: dateStr,
       time: timeStr,
+      utcDate: m.utcDate,
       homeTeamId: m.homeTeam.tla,
       awayTeamId: m.awayTeam.tla,
       venue: m.venue ?? '',
@@ -114,6 +124,10 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
       status: m.status,
     });
   }
+
+  // Assign sequential match numbers in chronological order
+  const sorted = [...matches].sort((a, b) => a.utcDate.localeCompare(b.utcDate));
+  sorted.forEach((m, i) => { m.matchNumber = i + 1; });
 
   return { matches, teams: teamMap };
 }

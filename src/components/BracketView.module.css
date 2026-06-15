@@ -92,3 +92,42 @@
   height: 1px;
   background: rgba(255, 255, 255, 0.07);
 }
+
+/* ── Group cards ─────────────────────────────────────── */
+.groupLabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 5px 7px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.groupRow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 5px 0 7px;
+  gap: 4px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.groupPos {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  width: 8px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.groupPts {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+  margin-left: auto;
+}

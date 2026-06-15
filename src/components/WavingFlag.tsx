@@ -18,7 +18,7 @@ const TLA_TO_ISO2: Record<string, string> = {
   SVK: 'sk', CZE: 'cz', SVN: 'si', GRE: 'gr',
   SCO: 'gb-sct', WAL: 'gb-wls', IRL: 'ie', ISL: 'is',
   CRC: 'cr', HON: 'hn', JAM: 'jm', TRI: 'tt',
-  HAI: 'ht', CUW: 'cw', BOL: 'bo', PAR: 'py',
+  HAI: 'ht', CUW: 'cw', BOL: 'bo', PAR: 'py', CPV: 'cv',
   ALG: 'dz', AUT: 'at', BIH: 'ba', CIV: 'ci',
   COD: 'cd', EQG: 'gq', GAB: 'ga', MOZ: 'mz',
   TAN: 'tz', ZIM: 'zw', ANG: 'ao', CHN: 'cn',
@@ -26,13 +26,20 @@ const TLA_TO_ISO2: Record<string, string> = {
   KUW: 'kw', QAT: 'qa', UAE: 'ae', UZB: 'uz',
 };
 
-const W = 210;
-const H = 111;
-const CANVAS_H = 125;
-const FREQUENCY = 40;
-const AMPLITUDE = 7;
+// Deterministic 0..1 value from a string — gives each team unique animation params
+function hashStr(s: string): number {
+  let h = 0;
+  for (const c of s) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+  return h / 0xffff;
+}
 
-export default function WavingFlag({ teamId }: { teamId: string }) {
+const BASE_W = 210;
+const BASE_H = 111;
+const BASE_CANVAS_H = 125;
+const BASE_FREQUENCY = 40;
+const BASE_AMPLITUDE = 7;
+
+export default function WavingFlag({ teamId, width = BASE_W, timeOffset = 0 }: { teamId: string; width?: number; timeOffset?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -43,6 +50,13 @@ export default function WavingFlag({ teamId }: { teamId: string }) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    const s = width / BASE_W;
+    const W = width;
+    const H = Math.round(BASE_H * s);
+    const CANVAS_H = Math.round(BASE_CANVAS_H * s);
+    const FREQUENCY = BASE_FREQUENCY * s;
+    const AMPLITUDE = BASE_AMPLITUDE * s;
 
     // HiDPI fix: render at physical pixel density, display at CSS size
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -64,23 +78,44 @@ export default function WavingFlag({ teamId }: { teamId: string }) {
     const img = new Image();
     img.src = `https://flags.fmcdn.net/data/flags/w580/${iso2}.png`;
 
-    let time = 0;
+    // Per-team animation signature derived from TLA hash
+    const h1 = hashStr(teamId);
+    const h2 = hashStr(teamId + teamId);  // second independent hash via doubled string
+    const h3 = hashStr(teamId + '~');
+    const gustFreq    = 0.013 + h1 * 0.009;   // 0.013..0.022 (~5–8s gust period)
+    const gustAmp     = 0.45  + h1 * 0.22;    // 0.45..0.67
+    const flutterFreq = 0.033 + h2 * 0.016;   // 0.033..0.049 (~2–3s flutter)
+    const flutterAmp  = 0.15  + h2 * 0.17;    // 0.15..0.32
+    const flutterPh   = h2 * Math.PI * 2;
+    const breathFreq  = 0.016 + h3 * 0.009;
+    const breathAmp   = 0.10  + h3 * 0.12;
+    const breathPh    = h3 * Math.PI * 2;
+
+    let time = timeOffset;
+    let frame = 0;
     let rafId: number;
 
     function drawFrame() {
+      const speed = 1.0
+        + gustAmp    * Math.sin(frame * gustFreq)
+        + flutterAmp * Math.sin(frame * flutterFreq + flutterPh);
+
+      const amp = physAmp * (1 + breathAmp * Math.sin(frame * breathFreq + breathPh));
+
       ctx!.clearRect(0, 0, physW, physCanvasH);
       for (let x = 0; x < W; x++) {
-        const yOffset = Math.sin((x + time) / FREQUENCY) * physAmp;
+        const yOffset = Math.sin((x + time) / FREQUENCY) * amp;
         const px = x * dpr;
-        ctx!.drawImage(off, px, 0, dpr, physH, px, yOffset + physAmp, dpr, physH);
+        ctx!.drawImage(off, px, 0, dpr, physH, px, yOffset + amp, dpr, physH);
         const slope = Math.cos((x + time) / FREQUENCY);
         const alpha = Math.abs(slope) * 0.18;
         ctx!.fillStyle = slope > 0
           ? `rgba(255,255,255,${alpha})`
           : `rgba(0,0,0,${alpha})`;
-        ctx!.fillRect(px, yOffset + physAmp, dpr, physH);
+        ctx!.fillRect(px, yOffset + amp, dpr, physH);
       }
-      time -= 1;
+      time -= speed;
+      frame++;
       rafId = requestAnimationFrame(drawFrame);
     }
 
@@ -90,7 +125,7 @@ export default function WavingFlag({ teamId }: { teamId: string }) {
     };
 
     return () => cancelAnimationFrame(rafId);
-  }, [teamId]);
+  }, [teamId, width, timeOffset]);
 
   return <canvas ref={canvasRef} className={styles.flag} />;
 }

@@ -1,0 +1,407 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.overlayOut {
+  animation: fadeOut 0.32s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  max-height: 90vh;
+  border-radius: 24px 24px 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  touch-action: pan-x;
+  user-select: none;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* ── Drag handle ─────────────────────────────────────── */
+.dragHandle {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+  z-index: 10;
+}
+
+/* ── Full-height color bands ─────────────────────────── */
+.bgLeft {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  bottom: 0;
+  z-index: 0;
+}
+
+.bgRight {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  bottom: 0;
+  z-index: 0;
+}
+
+/* ── Header ──────────────────────────────────────────── */
+.header {
+  position: relative;
+  height: 350px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+/* Game label pill — top center */
+.gamePill {
+  position: absolute;
+  top: 27px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(22, 22, 26, 0.2);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-radius: 10px;
+  padding: 9px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.pillLiveDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff3b30;
+  margin: 0 2px;
+  vertical-align: middle;
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+
+.gamePillPrimary {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 16px;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.gamePillSub {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.2;
+}
+
+/* Team blocks — positioned in their respective halves */
+.teamBlockLeft,
+.teamBlockRight {
+  position: absolute;
+  top: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: calc(50% - 16px);
+}
+
+.teamBlockLeft { left: 8px; }
+.teamBlockRight { right: 8px; }
+
+
+.teamName {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teamRankText {
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.teamRankMuted {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.teamRankBold {
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Score bar — no background, scores float over color bands */
+.scoreBar {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  padding: 20px 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  z-index: 2;
+}
+
+.scoreRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  width: 100%;
+}
+
+.scoreNum {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 40px;
+  color: #fff;
+  line-height: 1;
+  text-align: center;
+}
+
+.scoreSpacer {
+  width: 37px;
+  flex-shrink: 0;
+}
+
+.kickoffTime {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 28px;
+  color: #fff;
+  line-height: 1;
+}
+
+.liveBadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff3b30;
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+
+.liveText {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ff3b30;
+  letter-spacing: 0.08em;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+
+/* ── Body ────────────────────────────────────────────── */
+.body {
+  background: transparent;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 20px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 4px 0 2px;
+}
+
+.infoText {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.infoDot {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Cards ───────────────────────────────────────────── */
+.card {
+  background: rgba(22, 22, 26, 0.2);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.cardTitle {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 12px;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.emptyText {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+  padding: 4px 0;
+}
+
+/* ── Two-column layout ───────────────────────────────── */
+.twoCol {
+  display: flex;
+  gap: 74px;
+}
+
+.col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* ── Highlights ──────────────────────────────────────── */
+.eventItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iconBall {
+  font-size: 13px;
+  flex-shrink: 0;
+  width: 17px;
+  text-align: center;
+  line-height: 1;
+}
+
+.iconYellow,
+.iconRed,
+.iconYellowRed {
+  width: 12px;
+  height: 17px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.iconYellow    { background: #f5c518; }
+.iconRed       { background: #e8293b; }
+.iconYellowRed { background: linear-gradient(135deg, #f5c518 50%, #e8293b 50%); }
+
+.eventText {
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventMinInline {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Stat values ─────────────────────────────────────── */
+.statValue {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 30px;
+  color: #fff;
+  line-height: 1;
+  flex: 1;
+}
+
+/* ── Possession bar ──────────────────────────────────── */
+.possBar {
+  display: flex;
+  height: 3px;
+  border-radius: 2px;
+  overflow: hidden;
+  gap: 2px;
+  margin-top: -10px;
+}
+
+.possSegment {
+  height: 100%;
+  border-radius: 2px;
+}
+
+/* ── Squads ──────────────────────────────────────────── */
+.playerRow {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.playerName {
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerNum {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+}

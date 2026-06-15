@@ -102,6 +102,15 @@
   text-align: center;
 }
 
+.teamRank {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+
 .teamSub {
   font-size: 14px;
   font-weight: 700;
@@ -187,4 +196,61 @@
   font-size: 14px;
   text-align: center;
   padding: 20px 0;
+}
+
+.squadCard {
+  margin: 12px 0 24px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.squadTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.squadCoach {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 12px;
+}
+
+.squadGroup {
+  margin-top: 12px;
+}
+
+.squadPos {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.squadRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.squadRow:last-child {
+  border-bottom: none;
+}
+
+.squadName {
+  font-size: 14px;
+  color: #fff;
+}
+
+.squadDob {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
 }

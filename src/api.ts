@@ -7,6 +7,21 @@ export interface ApiTeam {
   crest: string;
 }
 
+export interface ApiGoal {
+  minute: number | null;
+  injuryTime?: number | null;
+  type: 'REGULAR' | 'EXTRA_TIME' | 'PENALTY' | 'OWN';
+  team: { id: number; name: string; tla: string };
+  scorer: { id?: number; name: string } | null;
+}
+
+export interface ApiBooking {
+  minute: number | null;
+  card: 'YELLOW' | 'RED' | 'YELLOW_RED';
+  team: { id: number; name: string; tla: string };
+  player: { id?: number; name: string } | null;
+}
+
 export interface ApiMatch {
   id: number;
   utcDate: string;
@@ -22,10 +37,14 @@ export interface ApiMatch {
     halfTime: { home: number | null; away: number | null };
   };
   venue: string | null;
+  goals: ApiGoal[] | null;
+  bookings: ApiBooking[] | null;
 }
 
 export interface ApiResponse {
   matches: ApiMatch[];
+  // Scorer data from worldcup26.ir, keyed by "{homeTla}:{awayTla}"
+  scorersByKey?: Record<string, { home: string | null; away: string | null }>;
 }
 
 // TLA → flag emoji
@@ -68,6 +87,7 @@ export const FLAG_MAP: Record<string, string> = {
 export const CONF_MAP: Record<string, string> = {
   USA: 'CONCACAF', MEX: 'CONCACAF', PAN: 'CONCACAF', CAN: 'CONCACAF',
   CRC: 'CONCACAF', HON: 'CONCACAF', JAM: 'CONCACAF', TRI: 'CONCACAF',
+  HAI: 'CONCACAF', CUW: 'CONCACAF',
   ARG: 'CONMEBOL', BRA: 'CONMEBOL', URU: 'CONMEBOL', COL: 'CONMEBOL',
   CHI: 'CONMEBOL', ECU: 'CONMEBOL', PAR: 'CONMEBOL', PER: 'CONMEBOL',
   VEN: 'CONMEBOL', BOL: 'CONMEBOL',
@@ -76,10 +96,10 @@ export const CONF_MAP: Record<string, string> = {
   SUI: 'UEFA', TUR: 'UEFA', POL: 'UEFA', DEN: 'UEFA', UKR: 'UEFA',
   ALB: 'UEFA', NOR: 'UEFA', SWE: 'UEFA', ROU: 'UEFA', HUN: 'UEFA',
   SVK: 'UEFA', CZE: 'UEFA', SVN: 'UEFA', GRE: 'UEFA', SCO: 'UEFA',
-  WAL: 'UEFA', IRL: 'UEFA', ISL: 'UEFA',
+  WAL: 'UEFA', IRL: 'UEFA', ISL: 'UEFA', AUT: 'UEFA', BIH: 'UEFA',
   MAR: 'CAF', NGA: 'CAF', SEN: 'CAF', GHA: 'CAF', CMR: 'CAF',
   EGY: 'CAF', TUN: 'CAF', SLE: 'CAF', RSA: 'CAF', CIV: 'CAF',
-  COD: 'CAF', ANG: 'CAF', ZIM: 'CAF', MOZ: 'CAF',
+  COD: 'CAF', ALG: 'CAF', CPV: 'CAF',
   JPN: 'AFC', KOR: 'AFC', AUS: 'AFC', IRN: 'AFC', KSA: 'AFC',
   THA: 'AFC', CHN: 'AFC', IRQ: 'AFC', JOR: 'AFC', QAT: 'AFC',
   UAE: 'AFC', UZB: 'AFC',

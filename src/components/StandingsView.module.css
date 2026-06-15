@@ -1,0 +1,155 @@
+.root {
+  padding: 32px 0 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.title {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 30px;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+/* ── Swiper ───────────────────────────────────────────── */
+.swiper {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+}
+.swiper::-webkit-scrollbar { display: none; }
+
+.page {
+  min-width: 100%;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  overflow-y: auto;
+  padding: 0 20px 100px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.page::-webkit-scrollbar { display: none; }
+
+/* ── Stage label ──────────────────────────────────────── */
+.stageLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 14px;
+}
+
+/* ── Cards ────────────────────────────────────────────── */
+.card {
+  background: #2c2c32;
+  border-radius: 20px;
+  padding: 5px 20px;
+  margin-bottom: 12px;
+}
+
+.rowDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Group cards ──────────────────────────────────────── */
+.groupTitle {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 14px;
+  color: #fff;
+  padding: 5px 0;
+}
+
+.teamRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.teamLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.teamFlag {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.teamName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teamPts {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.teamRowMuted .teamLeft,
+.teamRowMuted .teamPts {
+  opacity: 0.4;
+}
+
+/* ── Knockout match cards ─────────────────────────────── */
+.matchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.matchTeamName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matchScore {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.matchLoser .teamLeft,
+.matchLoser .matchTeamName,
+.matchLoser .matchScore {
+  opacity: 0.4;
+}
+
+.matchTbd {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.emptyState {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  margin-top: 40px;
+}

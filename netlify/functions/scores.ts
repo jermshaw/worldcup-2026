@@ -1,7 +1,7 @@
 import type { Context } from '@netlify/functions';
 
 const API_KEY = process.env.FOOTBALL_DATA_API_KEY ?? '';
-const BASE = 'https://api.football-data.org/v4';
+const FD_BASE = 'https://api.football-data.org/v4';
 
 export default async function handler(_req: Request, _ctx: Context) {
   if (!API_KEY) {
@@ -11,30 +11,23 @@ export default async function handler(_req: Request, _ctx: Context) {
     });
   }
 
-  try {
-    const res = await fetch(`${BASE}/competitions/WC/matches?season=2026`, {
-      headers: { 'X-Auth-Token': API_KEY },
-    });
+  const res = await fetch(`${FD_BASE}/competitions/WC/matches?season=2026`, {
+    headers: { 'X-Auth-Token': API_KEY },
+  });
 
-    if (!res.ok) {
-      return new Response(JSON.stringify({ error: `Upstream error: ${res.status}` }), {
-        status: res.status,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const data = await res.json();
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=55',
-      },
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: 'Failed to fetch scores' }), {
-      status: 500,
+  if (!res.ok) {
+    return new Response(JSON.stringify({ error: `Upstream error: ${res.status}` }), {
+      status: res.status,
       headers: { 'Content-Type': 'application/json' },
     });
   }
+
+  const data = await res.json();
+  return new Response(JSON.stringify(data), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=55',
+    },
+  });
 }
