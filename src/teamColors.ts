@@ -85,7 +85,7 @@ export const TEAM_COLORS: Record<string, string> = {
   UZB: '#1eb53a',
 
   // OFC
-  NZL: '#000000',
+  NZL: '#00247D',
 };
 
 export function getTeamColor(tla: string): string {

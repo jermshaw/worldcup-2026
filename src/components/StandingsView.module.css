@@ -1,5 +1,5 @@
 .root {
-  padding: 32px 0 0;
+  padding: 52px 0 0;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -25,11 +25,12 @@
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
   flex: 1;
+  padding-right: 32px;
 }
 .swiper::-webkit-scrollbar { display: none; }
 
 .page {
-  min-width: 100%;
+  min-width: calc(100% - 32px);
   flex-shrink: 0;
   scroll-snap-align: start;
   overflow-y: auto;
@@ -152,4 +153,109 @@
   color: rgba(255, 255, 255, 0.3);
   text-align: center;
   margin-top: 40px;
+}
+
+/* ── Bracket page ─────────────────────────────────────── */
+.bracketPage {
+  padding: 0 0 100px 20px;
+}
+
+.bracketScroll {
+  position: relative;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.bracketScroll::-webkit-scrollbar { display: none; }
+
+.bracketSvg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.bracketSvg line {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.roundCol {
+  flex-shrink: 0;
+  position: relative;
+  scroll-snap-align: start;
+  z-index: 1;
+}
+
+.roundLabel {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.bracketCard {
+  position: absolute;
+  background: #2c2c32;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.bracketTeam {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+  min-width: 0;
+}
+
+.bracketLoser { opacity: 0.35; }
+
+.bracketFlag {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.bracketName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.bracketScore {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.bracketDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  margin: 0 12px;
+}
+
+.bracketTbd {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.3);
 }

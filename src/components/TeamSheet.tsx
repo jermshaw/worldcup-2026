@@ -41,7 +41,7 @@ function matchResult(m: Match) {
 }
 
 
-export default function TeamSheet({ team, row, groupPosition, matches, teams, onClose }: Props) {
+export default function TeamSheet({ team, row, matches, teams, onClose }: Props) {
   const teamColor = getTeamColor(team.id);
   const [dragY, setDragY] = useState(0);
   const [dismissing, setDismissing] = useState(false);
@@ -133,10 +133,9 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
           <div className={styles.headerContent}>
             <WavingFlag teamId={team.id} />
             <h2 className={styles.teamName}>{team.name}</h2>
-            {FIFA_RANKINGS[team.id] && (
-              <p className={styles.teamRank}>Ranked {FIFA_RANKINGS[team.id]} in the world</p>
-            )}
-            <p className={styles.teamSub}>Group {team.group} · Position {groupPosition}</p>
+            <p className={styles.teamSub}>
+              Group {team.group}{FIFA_RANKINGS[team.id] ? <> • Ranked <span className={styles.rankNum}>{FIFA_RANKINGS[team.id]}</span> in the world</> : ''}
+            </p>
           </div>
           <div className={styles.statsRow}>
             <StatBlock label="Points" value={row?.pts ?? 0} />
@@ -225,13 +224,21 @@ export default function TeamSheet({ team, row, groupPosition, matches, teams, on
           {squad.length > 0 && (
             <div className={styles.squadCard}>
               <p className={styles.squadTitle}>Squad</p>
-              {coach && <p className={styles.squadCoach}>Coach: {coach}</p>}
-              {(['Goalkeeper', 'Defender', 'Midfielder', 'Offence'] as const).map(pos => {
+              {coach && (
+                <div className={styles.squadGroup}>
+                  <p className={styles.squadPos}>Coach</p>
+                  <div className={styles.squadRow}>
+                    <span className={styles.squadName}>{coach}</span>
+                  </div>
+                </div>
+              )}
+              {(['Goalkeeper', 'Defence', 'Midfield', 'Offence'] as const).map(pos => {
                 const players = squad.filter(p => p.position === pos);
                 if (!players.length) return null;
+                const label: Record<string, string> = { Goalkeeper: 'Goalkeepers', Defence: 'Defenders', Midfield: 'Midfielders', Offence: 'Forwards' };
                 return (
                   <div key={pos} className={styles.squadGroup}>
-                    <p className={styles.squadPos}>{pos}s</p>
+                    <p className={styles.squadPos}>{label[pos]}</p>
                     {players.map(p => (
                       <div key={p.id} className={styles.squadRow}>
                         <span className={styles.squadName}>{p.name}</span>

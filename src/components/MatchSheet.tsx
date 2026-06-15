@@ -206,9 +206,11 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
       >
         <div className={styles.dragHandle} />
 
-        {/* Full-height color bands behind everything */}
+        {/* Full-height color bands — outside scroll so they stay fixed */}
         <div className={styles.bgLeft} style={{ background: homeColor }} />
         <div className={styles.bgRight} style={{ background: awayColor }} />
+
+        <div ref={bodyRef} className={styles.sheetScroll}>
 
         {/* Header */}
         <div className={styles.header} style={!hasScore ? { height: 300 } : undefined}>
@@ -267,7 +269,7 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
         </div>
 
         {/* Scrollable body */}
-        <div ref={bodyRef} className={styles.body}>
+        <div className={styles.body}>
 
           {/* Goals scored */}
           {hasEvents && (
@@ -354,6 +356,7 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
           )}
 
         </div>
+        </div>{/* end sheetScroll */}
       </div>
     </div>
   );

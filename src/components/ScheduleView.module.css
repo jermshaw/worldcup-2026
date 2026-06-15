@@ -45,6 +45,31 @@
   width: 100%;
 }
 
+/* ── Back to today button ────────────────────────────── */
+.backToToday {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(22, 22, 26, 0.7);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-radius: 70px;
+  padding: 12px 24px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  z-index: 15;
+  white-space: nowrap;
+  animation: fadeInBtn 0.2s ease forwards;
+}
+
+@keyframes fadeInBtn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* ── Day group ───────────────────────────────────────── */
 .day {
   margin-bottom: 30px;
@@ -57,6 +82,10 @@
 }
 
 .dayPrimary {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.dayPrimaryHighlight {
   color: #fff;
 }
 
@@ -79,6 +108,11 @@
   display: flex;
   border-radius: var(--radius-card);
   overflow: hidden;
+  width: 100%;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  text-align: left;
 }
 
 .teamSide {
@@ -154,7 +188,7 @@
   transform: translate(-50%, -50%);
   width: 106px;
   height: 71px;
-  background: rgba(22, 22, 26, 0.6);
+  background: rgba(22, 22, 26, 0.2);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
   border-radius: 10px;
@@ -183,7 +217,7 @@
 .scoreDash {
   font-family: 'Dela Gothic One', sans-serif;
   font-size: 22px;
-  color: #717171;
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .time {

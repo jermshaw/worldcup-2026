@@ -118,6 +118,10 @@
   text-align: center;
 }
 
+.rankNum {
+  color: #fff;
+}
+
 .statsRow {
   display: flex;
   align-items: center;
@@ -206,9 +210,10 @@
 }
 
 .squadTitle {
+  font-family: 'Dela Gothic One', sans-serif;
   font-size: 13px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+  color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 4px;

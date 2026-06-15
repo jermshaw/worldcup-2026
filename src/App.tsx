@@ -30,6 +30,7 @@ export default function App() {
 
   const standings = useMemo(() => computeStandings(matches, teams), [matches, teams]);
   const played = matches.filter(m => m.homeScore !== null).length;
+  const remaining = 104 - played;
   const days = daysUntilFinal();
 
   if (status === 'loading') {
@@ -67,7 +68,7 @@ export default function App() {
           </div>
           <div className={styles.statDivider} />
           <div className={styles.statBlock}>
-            <span className={styles.statNum}>{matches.length - played}</span>
+            <span className={styles.statNum}>{remaining}</span>
             <span className={styles.statLbl}>Games remain</span>
           </div>
           <div className={styles.statDivider} />
@@ -80,7 +81,7 @@ export default function App() {
 
       <main className={styles.main}>
         {tab === 'schedule' && (
-          <ScheduleView matches={matches} teams={teams} standings={standings} />
+          <ScheduleView matches={matches} teams={teams} />
         )}
         {tab === 'teams' && (
           <TeamsView matches={matches} teams={teams} standings={standings} />
@@ -94,7 +95,7 @@ export default function App() {
         <div className={styles.navPill}>
           <div
             className={styles.navHighlight}
-            style={{ transform: `translateX(${({ schedule: 0, teams: 117, standings: 232 } as const)[tab]}px)` }}
+            style={{ transform: `translateX(${({ schedule: 0, teams: 114, standings: 228 } as const)[tab]}px)` }}
           />
           {([
             { id: 'schedule',  img: tabSchedule,   label: 'Schedule' },

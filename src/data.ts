@@ -63,6 +63,7 @@ function parseStage(raw: string): string {
   const map: Record<string, string> = {
     GROUP_STAGE: 'Group Stage',
     ROUND_OF_32: 'Round of 32',
+    LAST_32: 'Round of 32',
     LAST_16: 'Round of 16',
     QUARTER_FINALS: 'Quarter-final',
     SEMI_FINALS: 'Semi-final',
@@ -77,13 +78,15 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
   const matches: Match[] = [];
 
   for (const m of data.matches) {
-    if (!m.homeTeam?.tla || !m.awayTeam?.tla) continue;
+    if (!m.utcDate) continue;
 
+    const homeTla = m.homeTeam?.tla ?? null;
+    const awayTla = m.awayTeam?.tla ?? null;
     const group = parseGroup(m.group);
 
-    // Register teams (use group from first group stage match we see them in)
+    // Register teams only when TLA is known
     for (const apiTeam of [m.homeTeam, m.awayTeam]) {
-      if (!teamMap.has(apiTeam.tla) && group) {
+      if (apiTeam?.tla && !teamMap.has(apiTeam.tla) && group) {
         const hasEmoji = !!FLAG_MAP[apiTeam.tla];
         teamMap.set(apiTeam.tla, {
           id: apiTeam.tla,
@@ -97,8 +100,7 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
     }
 
     const date = new Date(m.utcDate);
-    // Use the viewer's local timezone so kick-off times are always "when to watch"
-    const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+    const dateStr = date.toLocaleDateString('en-CA');
     const timeStr = date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       ...(date.getMinutes() !== 0 ? { minute: '2-digit' } : {}),
@@ -116,8 +118,8 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
       date: dateStr,
       time: timeStr,
       utcDate: m.utcDate,
-      homeTeamId: m.homeTeam.tla,
-      awayTeamId: m.awayTeam.tla,
+      homeTeamId: homeTla ?? `TBD-${m.id}-H`,
+      awayTeamId: awayTla ?? `TBD-${m.id}-A`,
       venue: m.venue ?? '',
       homeScore: hasScore ? (m.score.fullTime.home ?? null) : null,
       awayScore: hasScore ? (m.score.fullTime.away ?? null) : null,
