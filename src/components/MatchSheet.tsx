@@ -103,9 +103,11 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   const [detail, setDetail] = useState<MatchDetail | null>(null);
   const [wcEvents, setWcEvents] = useState<MatchEvent[]>([]);
   const [squads, setSquads] = useState<Record<string, TeamSquad>>({});
-  const dragging = useRef(false);
-  const startY = useRef(0);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const touchActive = useRef(false);
+  const touchStartY = useRef(0);
+  const touchCurY = useRef(0);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -162,22 +164,50 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
     setTimeout(onClose, 320);
   }
 
-  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    dragging.current = true;
-    startY.current = e.clientY;
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
 
-  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (!dragging.current) return;
-    setDragY(Math.max(0, e.clientY - startY.current));
-  }
+    function onTouchStart(e: TouchEvent) {
+      touchStartY.current = e.touches[0].clientY;
+      touchActive.current = false;
+      touchCurY.current = 0;
+    }
 
-  function onPointerUp() {
-    if (!dragging.current) return;
-    dragging.current = false;
-    if (dragY > 120) dismiss(); else setDragY(0);
-  }
+    function onTouchMove(e: TouchEvent) {
+      const dy = e.touches[0].clientY - touchStartY.current;
+      const scrolled = bodyRef.current?.scrollTop ?? 0;
+      if (touchActive.current || (scrolled === 0 && dy > 0)) {
+        touchActive.current = true;
+        e.preventDefault();
+        touchCurY.current = Math.max(0, dy);
+        setDragY(touchCurY.current);
+      }
+    }
+
+    function onTouchEnd() {
+      if (!touchActive.current) return;
+      touchActive.current = false;
+      if (touchCurY.current > 120) {
+        setDismissing(true);
+        setDragY(window.innerHeight);
+        setTimeout(onClose, 320);
+      } else {
+        setDragY(0);
+      }
+    }
+
+    sheet.addEventListener('touchstart', onTouchStart, { passive: true });
+    sheet.addEventListener('touchmove', onTouchMove, { passive: false });
+    sheet.addEventListener('touchend', onTouchEnd);
+    sheet.addEventListener('touchcancel', onTouchEnd);
+    return () => {
+      sheet.removeEventListener('touchstart', onTouchStart);
+      sheet.removeEventListener('touchmove', onTouchMove);
+      sheet.removeEventListener('touchend', onTouchEnd);
+      sheet.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [onClose]);
 
   const hasScore = match.homeScore !== null && match.awayScore !== null;
   const live = isLive(match);
@@ -199,20 +229,15 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
       onClick={dismiss}
     >
       <div
+        ref={sheetRef}
         className={styles.sheet}
         style={{
           transform: `translateY(${dragY}px)`,
-          transition: dragging.current ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+          transition: touchActive.current ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div
-          className={styles.dragZone}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-        >
+        <div className={styles.dragZone}>
           <div className={styles.dragHandle} />
         </div>
 
