@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { Match, Team, Group, StandingRow } from '../data';
 import { GROUPS } from '../data';
-import { getTeamColor } from '../teamColors';
+import { getTeamColor, getTeamTextColor } from '../teamColors';
 import TeamSheet from './TeamSheet';
 import searchIcon from '../assets/nav/Search.png';
 import styles from './TeamsView.module.css';
@@ -140,7 +140,7 @@ interface CardProps {
 
 function TeamCard({ team, row, onClick }: CardProps) {
   return (
-    <button className={styles.card} style={{ background: getTeamColor(team.id) }} onClick={onClick}>
+    <button className={styles.card} style={{ background: getTeamColor(team.id), color: getTeamTextColor(team.id) }} onClick={onClick}>
       <div className={styles.cardLeft}>
         {team.crest
           ? <img src={team.crest} className={styles.cardFlagImg} alt={team.name} />

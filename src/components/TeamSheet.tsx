@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Match, Team, StandingRow } from '../data';
 import { formatMatchDate, isLive } from '../data';
-import { getTeamColor } from '../teamColors';
+import { getTeamColor, getTeamTextColor } from '../teamColors';
 import { FIFA_RANKINGS } from '../fifaRankings';
 import WavingFlag from './WavingFlag';
 import MatchSheet from './MatchSheet';
@@ -181,6 +181,7 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
         className={styles.sheet}
         style={{
           background: teamColor,
+          color: getTeamTextColor(team.id),
           transform: `translateY(${dragY}px)`,
           transition: (touchActive.current || pointerActive.current) ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
@@ -197,7 +198,7 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
         <div className={styles.header}>
           <div className={styles.headerContent}>
             <WavingFlag teamId={team.id} />
-            <h2 className={styles.teamName}>{team.name}</h2>
+            <h2 className={styles.teamName} style={{ color: getTeamTextColor(team.id) }}>{team.name}</h2>
             <p className={styles.teamSub}>
               Group {team.group}{FIFA_RANKINGS[team.id] ? <> • Ranked <span className={styles.rankNum}>{FIFA_RANKINGS[team.id]}</span> in the world</> : ''}
             </p>
@@ -242,7 +243,7 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
                     <div key={m.id} className={`${cardStyles.card} ${live ? cardStyles.cardLive : ''}`}>
                       <div
                         className={`${cardStyles.teamSide} ${cardStyles.teamSideLeft} ${homeDim ? cardStyles.teamSideDim : ''}`}
-                        style={{ background: homeColor }}
+                        style={{ background: homeColor, color: getTeamTextColor(m.homeTeamId) }}
                       >
                         {home.crest
                           ? <img src={home.crest} className={cardStyles.teamFlagImg} alt={home.name} />
@@ -251,7 +252,7 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
                       </div>
                       <div
                         className={`${cardStyles.teamSide} ${cardStyles.teamSideRight} ${awayDim ? cardStyles.teamSideDim : ''}`}
-                        style={{ background: awayColor }}
+                        style={{ background: awayColor, color: getTeamTextColor(m.awayTeamId) }}
                       >
                         {away.crest
                           ? <img src={away.crest} className={cardStyles.teamFlagImg} alt={away.name} />

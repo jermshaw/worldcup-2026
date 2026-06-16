@@ -2,7 +2,7 @@ import { useMemo, useEffect, useRef, useState } from 'react';
 import type React from 'react';
 import type { Match, Team } from '../data';
 import { formatMatchDate, isLive } from '../data';
-import { getTeamColor } from '../teamColors';
+import { getTeamColor, getTeamTextColor } from '../teamColors';
 import { MATCH_CITY } from '../venueMap';
 import MatchSheet from './MatchSheet';
 import styles from './ScheduleView.module.css';
@@ -132,6 +132,8 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
                 const awayDim = result === 'home';
                 const homeColor = homeTbd ? '#919191' : getTeamColor(m.homeTeamId);
                 const awayColor = awayTbd ? '#666666' : getTeamColor(m.awayTeamId);
+                const homeTextColor = homeTbd ? '#fff' : getTeamTextColor(m.homeTeamId);
+                const awayTextColor = awayTbd ? '#fff' : getTeamTextColor(m.awayTeamId);
 
                 const live = isLive(m);
                 const centerLabel = m.group ? `Group ${m.group}` : m.stage;
@@ -141,7 +143,7 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
                     {/* Home side */}
                     <div
                       className={`${styles.teamSide} ${styles.teamSideLeft} ${homeDim ? styles.teamSideDim : ''}`}
-                      style={{ background: homeColor }}
+                      style={{ background: homeColor, color: homeTextColor }}
                     >
                       {homeTbd ? (
                         <>
@@ -164,7 +166,7 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
                     {/* Away side */}
                     <div
                       className={`${styles.teamSide} ${styles.teamSideRight} ${awayDim ? styles.teamSideDim : ''}`}
-                      style={{ background: awayColor }}
+                      style={{ background: awayColor, color: awayTextColor }}
                     >
                       {awayTbd ? (
                         <>

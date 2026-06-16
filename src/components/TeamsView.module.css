@@ -146,7 +146,7 @@
 .cardName {
   font-size: 13px;
   font-weight: 700;
-  color: #fff;
+  color: inherit;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -171,7 +171,7 @@
 .statNum {
   font-family: 'Dela Gothic One', sans-serif;
   font-size: 16px;
-  color: #fff;
+  color: inherit;
   line-height: 1;
   text-align: center;
 }
@@ -179,17 +179,19 @@
 .statLbl {
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);
+  color: inherit;
+  opacity: 0.55;
   white-space: nowrap;
 }
 
 .statDim {
-  color: rgba(255, 255, 255, 0.4);
+  opacity: 0.35;
 }
 
 .statDivider {
   width: 1px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.2);
+  background: currentColor;
+  opacity: 0.2;
   flex-shrink: 0;
 }

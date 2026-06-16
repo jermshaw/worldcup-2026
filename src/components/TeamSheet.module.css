@@ -114,12 +114,14 @@
 .teamSub {
   font-size: 14px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.5);
+  color: inherit;
+  opacity: 0.55;
   text-align: center;
 }
 
 .rankNum {
-  color: #fff;
+  color: inherit;
+  opacity: 1;
 }
 
 .statsRow {
@@ -140,27 +142,29 @@
 .statNum {
   font-family: 'Dela Gothic One', sans-serif;
   font-size: 30px;
-  color: #fff;
+  color: inherit;
   line-height: 1;
   text-align: center;
   width: 100%;
 }
 
 .statDim {
-  color: rgba(255, 255, 255, 0.4);
+  opacity: 0.4;
 }
 
 .statLbl {
   font-size: 14px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
+  color: inherit;
+  opacity: 0.6;
   white-space: nowrap;
 }
 
 .statDiv {
   width: 1px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.2);
+  background: currentColor;
+  opacity: 0.2;
   flex-shrink: 0;
 }
 
