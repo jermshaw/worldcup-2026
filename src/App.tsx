@@ -11,11 +11,9 @@ import styles from './App.module.css';
 import tabSchedule from './assets/nav/tab-schedule.png';
 import tabTeams from './assets/nav/tab-teams.png';
 import tabStandings from './assets/nav/tab-standings.png';
-import wcBall from './assets/nav/Ball.png';
+import BallAnimation from './components/BallAnimation';
 
 type Tab = 'schedule' | 'teams' | 'standings';
-
-const WC_LOGO = wcBall;
 const FINAL_DATE = new Date('2026-07-19');
 
 function daysUntilFinal() {
@@ -36,7 +34,7 @@ export default function App() {
   if (status === 'loading') {
     return (
       <div className={styles.splash}>
-        <img src={WC_LOGO} alt="" className={styles.splashLogo} />
+        <BallAnimation className={styles.splashLogo} size={80} />
         <div className={styles.splashTitle}>WORLD CUP 2026</div>
         <div className={styles.splashSub}>Loading…</div>
       </div>
@@ -57,7 +55,7 @@ export default function App() {
     <div className={styles.app}>
       {tab !== 'teams' && tab !== 'standings' && <header className={styles.header}>
         <div className={styles.headerTop}>
-          <img src={WC_LOGO} alt="World Cup 2026" className={styles.logo} />
+          <BallAnimation className={styles.logo} size={50} />
           <h1 className={styles.title}>{'WORLD CUP\n'}<span className={styles.titleYear}>2026</span></h1>
         </div>
 

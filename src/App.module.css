@@ -208,7 +208,6 @@
   width: 80px;
   height: 80px;
   object-fit: contain;
-  animation: spin 2s linear infinite;
 }
 
 @keyframes spin {
