@@ -308,9 +308,9 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
           </div>
 
           {/* Home team */}
-          <div className={styles.teamBlockLeft}>
+          <div className={styles.teamBlockLeft} style={{ color: getTeamTextColor(match.homeTeamId) }}>
             <WavingFlag teamId={match.homeTeamId} width={130} />
-            <h2 className={styles.teamName} style={{ color: getTeamTextColor(match.homeTeamId) }}>{homeTeam?.name ?? match.homeTeamId}</h2>
+            <h2 className={styles.teamName}>{homeTeam?.name ?? match.homeTeamId}</h2>
             {FIFA_RANKINGS[match.homeTeamId] && (
               <p className={styles.teamRankText}>
                 <span className={styles.teamRankMuted}>Ranked </span>
@@ -321,9 +321,9 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
           </div>
 
           {/* Away team */}
-          <div className={styles.teamBlockRight}>
+          <div className={styles.teamBlockRight} style={{ color: getTeamTextColor(match.awayTeamId) }}>
             <WavingFlag teamId={match.awayTeamId} width={130} timeOffset={200} />
-            <h2 className={styles.teamName} style={{ color: getTeamTextColor(match.awayTeamId) }}>{awayTeam?.name ?? match.awayTeamId}</h2>
+            <h2 className={styles.teamName}>{awayTeam?.name ?? match.awayTeamId}</h2>
             {FIFA_RANKINGS[match.awayTeamId] && (
               <p className={styles.teamRankText}>
                 <span className={styles.teamRankMuted}>Ranked </span>

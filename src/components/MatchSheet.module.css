@@ -169,7 +169,7 @@
   font-family: 'Dela Gothic One', sans-serif;
   font-size: 18px;
   font-weight: 400;
-  color: #fff;
+  color: inherit;
   text-align: center;
   line-height: 1.2;
   max-width: 140px;
@@ -181,7 +181,7 @@
 .teamRankText {
   font-size: 12px;
   font-weight: 500;
-  color: #fff;
+  color: inherit;
   text-align: center;
   white-space: nowrap;
   line-height: 1;
@@ -189,12 +189,13 @@
 }
 
 .teamRankMuted {
-  color: rgba(255, 255, 255, 0.5);
+  color: inherit;
+  opacity: 0.55;
 }
 
 .teamRankBold {
   font-weight: 700;
-  color: #fff;
+  color: inherit;
 }
 
 /* Score bar — no background, scores float over color bands */
