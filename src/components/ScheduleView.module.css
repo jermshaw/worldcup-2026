@@ -234,6 +234,13 @@
   color: rgba(255,255,255,0.6);
 }
 
+.matchMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
 /* ── Live card variant ───────────────────────────────── */
 .cardLive {
   height: 140px;

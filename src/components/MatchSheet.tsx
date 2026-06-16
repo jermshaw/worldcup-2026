@@ -3,6 +3,7 @@ import type { Match, Team } from '../data';
 import { isLive } from '../data';
 import { getTeamColor } from '../teamColors';
 import { FIFA_RANKINGS } from '../fifaRankings';
+import { MATCH_CITY } from '../venueMap';
 import WavingFlag from './WavingFlag';
 import styles from './MatchSheet.module.css';
 
@@ -105,6 +106,12 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   const dragging = useRef(false);
   const startY = useRef(0);
   const bodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
   useEffect(() => {
     getWcScorerMap().then(map => {
@@ -221,6 +228,7 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
             <span className={styles.gamePillSub}>
               {match.group ? `Group ${match.group} • ` : ''}
               {new Date(`${match.date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {MATCH_CITY[match.apiId] ? ` • ${MATCH_CITY[match.apiId]}` : ''}
               {live ? (
                 <> • <span className={styles.pillLiveDot} /> LIVE</>
               ) : match.status === 'FINISHED' ? (

@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef, useState } from 'react';
 import type { Match, Team } from '../data';
 import { formatMatchDate, isLive } from '../data';
 import { getTeamColor } from '../teamColors';
+import { MATCH_CITY } from '../venueMap';
 import MatchSheet from './MatchSheet';
 import styles from './ScheduleView.module.css';
 
@@ -194,7 +195,10 @@ export default function ScheduleView({ matches, teams }: Props) {
                       ) : (
                         <div className={styles.time}>{m.time}</div>
                       )}
-                      <div className={styles.groupLabel}>{centerLabel}</div>
+                      <div className={styles.matchMeta}>
+                        <div className={styles.groupLabel}>{centerLabel}</div>
+                        {MATCH_CITY[m.apiId] && <div className={styles.groupLabel}>{MATCH_CITY[m.apiId]}</div>}
+                      </div>
                     </div>
                   </button>
                 );
