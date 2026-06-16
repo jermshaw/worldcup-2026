@@ -33,7 +33,6 @@
   display: flex;
   flex-direction: column;
   animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  touch-action: pan-y;
   user-select: none;
 }
 
@@ -54,7 +53,18 @@
   to   { transform: translateY(0); }
 }
 
-/* ── Drag handle ─────────────────────────────────────── */
+/* ── Drag zone + handle ──────────────────────────────── */
+.dragZone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  touch-action: none;
+  z-index: 10;
+  cursor: grab;
+}
+
 .dragHandle {
   position: absolute;
   top: 10px;
@@ -64,7 +74,7 @@
   height: 4px;
   background: rgba(255, 255, 255, 0.35);
   border-radius: 2px;
-  z-index: 10;
+  pointer-events: none;
 }
 
 /* ── Full-height color bands ─────────────────────────── */

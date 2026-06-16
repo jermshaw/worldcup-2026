@@ -163,7 +163,6 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   }
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    if ((bodyRef.current?.scrollTop ?? 0) > 0) return;
     dragging.current = true;
     startY.current = e.clientY;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -206,12 +205,16 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
           transition: dragging.current ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
         onClick={e => e.stopPropagation()}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
       >
-        <div className={styles.dragHandle} />
+        <div
+          className={styles.dragZone}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        >
+          <div className={styles.dragHandle} />
+        </div>
 
         {/* Full-height color bands — outside scroll so they stay fixed */}
         <div className={styles.bgLeft} style={{ background: homeColor }} />
