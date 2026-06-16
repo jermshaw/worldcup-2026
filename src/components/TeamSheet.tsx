@@ -48,8 +48,25 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [squad, setSquad] = useState<{ id: number; name: string; position: string | null; dateOfBirth: string | null }[]>([]);
   const [coach, setCoach] = useState<string | null>(null);
-  const dragging = useRef(false);
-  const startY = useRef(0);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const touchActive = useRef(false);
+  const touchStartY = useRef(0);
+  const touchCurY = useRef(0);
+  const pointerActive = useRef(false);
+  const pointerStartY = useRef(0);
+
+  useEffect(() => {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const prev = document.body.style.overflow;
+    const prevPad = document.body.style.paddingRight;
+    document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
+    return () => {
+      document.body.style.overflow = prev;
+      document.body.style.paddingRight = prevPad;
+    };
+  }, []);
 
   useEffect(() => {
     fetch('/.netlify/functions/squads')
@@ -61,8 +78,6 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
       })
       .catch(() => null);
   }, [team.id]);
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
 
   function dismiss() {
     setDismissing(true);
@@ -71,27 +86,77 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
   }
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    if ((bodyRef.current?.scrollTop ?? 0) > 0) return;
-    dragging.current = true;
-    startY.current = e.clientY;
-    e.currentTarget.setPointerCapture(e.pointerId);
+    if (e.pointerType === 'touch') return;
+    pointerStartY.current = e.clientY;
   }
 
   function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (!dragging.current) return;
-    const delta = Math.max(0, e.clientY - startY.current);
-    setDragY(delta);
+    if (e.pointerType === 'touch') return;
+    if (!(e.buttons & 1)) return;
+    const dy = e.clientY - pointerStartY.current;
+    const scrolled = bodyRef.current?.scrollTop ?? 0;
+    if (pointerActive.current) {
+      setDragY(Math.max(0, dy));
+    } else if (scrolled === 0 && dy > 10) {
+      pointerActive.current = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setDragY(dy);
+    }
   }
 
   function onPointerUp() {
-    if (!dragging.current) return;
-    dragging.current = false;
-    if (dragY > 120) {
-      dismiss();
-    } else {
-      setDragY(0);
-    }
+    if (!pointerActive.current) return;
+    pointerActive.current = false;
+    setDragY(prev => {
+      if (prev > 120) { setDismissing(true); setTimeout(onClose, 320); return window.innerHeight; }
+      return 0;
+    });
   }
+
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+
+    function onTouchStart(e: TouchEvent) {
+      touchStartY.current = e.touches[0].clientY;
+      touchActive.current = false;
+      touchCurY.current = 0;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      const dy = e.touches[0].clientY - touchStartY.current;
+      const scrolled = bodyRef.current?.scrollTop ?? 0;
+      if (touchActive.current || (scrolled === 0 && dy > 0)) {
+        touchActive.current = true;
+        e.preventDefault();
+        touchCurY.current = Math.max(0, dy);
+        setDragY(touchCurY.current);
+      }
+    }
+
+    function onTouchEnd() {
+      if (!touchActive.current) return;
+      touchActive.current = false;
+      if (touchCurY.current > 120) {
+        setDismissing(true);
+        setDragY(window.innerHeight);
+        setTimeout(onClose, 320);
+      } else {
+        setDragY(0);
+      }
+    }
+
+    sheet.addEventListener('touchstart', onTouchStart, { passive: true });
+    sheet.addEventListener('touchmove', onTouchMove, { passive: false });
+    sheet.addEventListener('touchend', onTouchEnd);
+    sheet.addEventListener('touchcancel', onTouchEnd);
+    return () => {
+      sheet.removeEventListener('touchstart', onTouchStart);
+      sheet.removeEventListener('touchmove', onTouchMove);
+      sheet.removeEventListener('touchend', onTouchEnd);
+      sheet.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [onClose]);
 
   const teamMatches = matches.filter(
     m => m.stage === 'Group Stage' && (m.homeTeamId === team.id || m.awayTeamId === team.id)
@@ -117,7 +182,7 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
         style={{
           background: teamColor,
           transform: `translateY(${dragY}px)`,
-          transition: dragging.current ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+          transition: (touchActive.current || pointerActive.current) ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
         onClick={e => e.stopPropagation()}
         onPointerDown={onPointerDown}

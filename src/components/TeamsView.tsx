@@ -3,6 +3,7 @@ import type { Match, Team, Group, StandingRow } from '../data';
 import { GROUPS } from '../data';
 import { getTeamColor } from '../teamColors';
 import TeamSheet from './TeamSheet';
+import searchIcon from '../assets/nav/Search.png';
 import styles from './TeamsView.module.css';
 
 interface Props {
@@ -62,35 +63,50 @@ export default function TeamsView({ matches, teams, standings }: Props) {
 
   return (
     <div className={styles.root}>
-      <div className={styles.titleRow}>
-        <h2 className={styles.title}>Teams</h2>
-        <div className={styles.toggle}>
-          <button
-            className={`${styles.toggleBtn} ${sortMode === 'groups' ? styles.toggleBtnActive : ''}`}
-            onClick={() => setSortMode('groups')}
-          >Groups</button>
-          <button
-            className={`${styles.toggleBtn} ${sortMode === 'abc' ? styles.toggleBtnActive : ''}`}
-            onClick={() => setSortMode('abc')}
-          >ABC</button>
+      <div className={styles.stickyHeader}>
+        <div className={styles.titleRow}>
+          <h2 className={styles.title}>Teams</h2>
+          <div className={styles.toggle}>
+            <button
+              className={`${styles.toggleBtn} ${sortMode === 'groups' ? styles.toggleBtnActive : ''}`}
+              onClick={() => setSortMode('groups')}
+            >Groups</button>
+            <button
+              className={`${styles.toggleBtn} ${sortMode === 'abc' ? styles.toggleBtnActive : ''}`}
+              onClick={() => setSortMode('abc')}
+            >ABC</button>
+          </div>
+        </div>
+
+        <div className={styles.searchWrap}>
+          <img src={searchIcon} className={styles.searchIcon} alt="" />
+          <input
+            className={styles.searchInput}
+            placeholder="Search teams or groups"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
       </div>
 
-      <div className={styles.searchWrap}>
-        <span className={styles.searchIcon}>🔍</span>
-        <input
-          className={styles.searchInput}
-          placeholder="Search teams or groups"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-      </div>
-
-      {sortMode === 'groups' ? (
-        activeGroups.map(g => (
-          <div key={g} className={styles.group}>
-            <div className={styles.groupHeader}>Group {g}</div>
-            {teamsByGroup(g).map(team => (
+      <div className={styles.listContent}>
+        {sortMode === 'groups' ? (
+          activeGroups.map(g => (
+            <div key={g} className={styles.group}>
+              <div className={styles.groupHeader}>Group {g}</div>
+              {teamsByGroup(g).map(team => (
+                <TeamCard
+                  key={team.id}
+                  team={team}
+                  row={teamStandings.get(team.id)}
+                  onClick={() => setSelectedTeamId(team.id)}
+                />
+              ))}
+            </div>
+          ))
+        ) : (
+          <div className={styles.group}>
+            {sortedAlpha.map(team => (
               <TeamCard
                 key={team.id}
                 team={team}
@@ -99,19 +115,8 @@ export default function TeamsView({ matches, teams, standings }: Props) {
               />
             ))}
           </div>
-        ))
-      ) : (
-        <div className={styles.group}>
-          {sortedAlpha.map(team => (
-            <TeamCard
-              key={team.id}
-              team={team}
-              row={teamStandings.get(team.id)}
-              onClick={() => setSelectedTeamId(team.id)}
-            />
-          ))}
-        </div>
-      )}
+        )}
+      </div>
 
       {selectedTeam && (
         <TeamSheet

@@ -1,4 +1,5 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
+import type React from 'react';
 import type { Match, Team } from '../data';
 import { formatMatchDate, isLive } from '../data';
 import { getTeamColor } from '../teamColors';
@@ -9,6 +10,7 @@ import styles from './ScheduleView.module.css';
 interface Props {
   matches: Match[];
   teams: Map<string, Team>;
+  scrollRef?: React.RefObject<HTMLElement>;
 }
 
 function isToday(dateStr: string) {
@@ -31,7 +33,7 @@ function dayLabel(dateStr: string): { primary: string; secondary: string } {
   return { primary: formatMatchDate(dateStr), secondary: '' };
 }
 
-export default function ScheduleView({ matches, teams }: Props) {
+export default function ScheduleView({ matches, teams, scrollRef }: Props) {
   const [todayEl, setTodayEl] = useState<HTMLDivElement | null>(null);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [showBackToToday, setShowBackToToday] = useState(false);
@@ -54,8 +56,10 @@ export default function ScheduleView({ matches, teams }: Props) {
       didInitialScroll.current = true;
       const header = document.querySelector('header');
       const h = header ? header.getBoundingClientRect().height : 0;
-      const top = todayEl.getBoundingClientRect().top + window.scrollY - h - 16;
-      window.scrollTo({ top, behavior: 'instant' });
+      const scrollEl = scrollRef?.current ?? window;
+      const scrollTop = scrollRef?.current ? scrollRef.current.scrollTop : window.scrollY;
+      const top = todayEl.getBoundingClientRect().top + scrollTop - h - 16;
+      scrollEl.scrollTo({ top, behavior: 'instant' });
     }
 
     const obs = new IntersectionObserver(
@@ -72,8 +76,10 @@ export default function ScheduleView({ matches, teams }: Props) {
     if (!todayEl) return;
     const header = document.querySelector('header');
     const h = header ? header.getBoundingClientRect().height : 0;
-    const top = todayEl.getBoundingClientRect().top + window.scrollY - h - 16;
-    window.scrollTo({ top, behavior: 'smooth' });
+    const scrollEl = scrollRef?.current ?? window;
+    const scrollTop = scrollRef?.current ? scrollRef.current.scrollTop : window.scrollY;
+    const top = todayEl.getBoundingClientRect().top + scrollTop - h - 16;
+    scrollEl.scrollTo({ top, behavior: 'smooth' });
   }
 
   const byDate = useMemo(() => {

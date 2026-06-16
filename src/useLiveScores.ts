@@ -5,12 +5,33 @@ import type { ApiResponse } from './api';
 
 export type LiveStatus = 'loading' | 'live' | 'error';
 
+const CACHE_KEY = 'wc2026_scores_v1';
+
+function readCache(): { matches: Match[]; teams: Map<string, Team> } | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { data } = JSON.parse(raw) as { data: ApiResponse; ts: number };
+    return buildFromApi(data);
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(data: ApiResponse) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+  } catch { /* quota exceeded, ignore */ }
+}
+
+const initialCache = readCache();
+
 export function useLiveScores() {
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [teams, setTeams] = useState<Map<string, Team>>(new Map());
-  const [status, setStatus] = useState<LiveStatus>('loading');
+  const [matches, setMatches] = useState<Match[]>(initialCache?.matches ?? []);
+  const [teams, setTeams] = useState<Map<string, Team>>(initialCache?.teams ?? new Map());
+  const [status, setStatus] = useState<LiveStatus>(initialCache ? 'live' : 'loading');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const matchesRef = useRef<Match[]>([]);
+  const matchesRef = useRef<Match[]>(initialCache?.matches ?? []);
 
   const fetchScores = useCallback(async () => {
     try {
@@ -19,6 +40,7 @@ export function useLiveScores() {
       const data: ApiResponse = await res.json();
       if (!data.matches) throw new Error('No matches in response');
 
+      writeCache(data);
       const { matches: newMatches, teams: newTeams } = buildFromApi(data);
 
       // On subsequent fetches, preserve any manually-entered scores

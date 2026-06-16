@@ -108,11 +108,19 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   const touchActive = useRef(false);
   const touchStartY = useRef(0);
   const touchCurY = useRef(0);
+  const pointerActive = useRef(false);
+  const pointerStartY = useRef(0);
 
   useEffect(() => {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     const prev = document.body.style.overflow;
+    const prevPad = document.body.style.paddingRight;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
+    return () => {
+      document.body.style.overflow = prev;
+      document.body.style.paddingRight = prevPad;
+    };
   }, []);
 
   useEffect(() => {
@@ -162,6 +170,34 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
     setDismissing(true);
     setDragY(window.innerHeight);
     setTimeout(onClose, 320);
+  }
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === 'touch') return;
+    pointerStartY.current = e.clientY;
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === 'touch') return;
+    if (!(e.buttons & 1)) return;
+    const dy = e.clientY - pointerStartY.current;
+    const scrolled = bodyRef.current?.scrollTop ?? 0;
+    if (pointerActive.current) {
+      setDragY(Math.max(0, dy));
+    } else if (scrolled === 0 && dy > 10) {
+      pointerActive.current = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setDragY(dy);
+    }
+  }
+
+  function onPointerUp() {
+    if (!pointerActive.current) return;
+    pointerActive.current = false;
+    setDragY(prev => {
+      if (prev > 120) { setDismissing(true); setTimeout(onClose, 320); return window.innerHeight; }
+      return 0;
+    });
   }
 
   useEffect(() => {
@@ -233,9 +269,13 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
         className={styles.sheet}
         style={{
           transform: `translateY(${dragY}px)`,
-          transition: touchActive.current ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+          transition: (touchActive.current || pointerActive.current) ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
         onClick={e => e.stopPropagation()}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
         <div className={styles.dragZone}>
           <div className={styles.dragHandle} />
