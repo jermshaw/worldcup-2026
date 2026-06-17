@@ -16,9 +16,9 @@ export const TEAM_COLORS: Record<string, string> = {
   CUW: '#3060C8',   // royal blue
 
   // ── CONMEBOL ──────────────────────────────────────────────────────────────
-  ARG: '#8FCBF6',   // celeste sky blue
+  ARG: '#43A6DA',   // celeste
   BRA: '#F0C428',   // Seleção yellow
-  URU: '#89C0FB',   // sky blue
+  URU: '#34A2F9',   // sky blue
   COL: '#F0C030',   // gold yellow
   CHI: '#D52B1E',   // red
   ECU: '#F0BF28',   // golden yellow
@@ -62,13 +62,13 @@ export const TEAM_COLORS: Record<string, string> = {
   // ── CAF ───────────────────────────────────────────────────────────────────
   MAR: '#CC3830',   // tomato red
   NGA: '#008751',   // green
-  SEN: '#FFE25D',   // golden yellow
+  SEN: '#D7C11F',   // golden yellow
   GHA: '#EEC028',   // golden yellow
   CMR: '#007A5E',   // teal-green
   EGY: '#D44030',   // tomato red
   TUN: '#DB332E',   // red
   SLE: '#1EB53A',   // bright green
-  RSA: '#FFD72F',   // golden yellow
+  RSA: '#DEAB00',   // gold
   CIV: '#E07820',   // orange
   COD: '#2B7EF8',   // blue
   ALG: '#00A362',   // green
@@ -83,12 +83,12 @@ export const TEAM_COLORS: Record<string, string> = {
   THA: '#A51931',   // deep red
   CHN: '#DE2910',   // vivid red
   IRQ: '#3A7848',   // forest green
-  JOR: '#F03A27',   // red
+  JOR: '#007E39',   // green
   QAT: '#85263D',   // deep maroon
   UZB: '#0D27A4',   // deep blue
 
   // ── OFC ───────────────────────────────────────────────────────────────────
-  NZL: '#111111',   // black
+  NZL: '#00216B',   // navy
 };
 
 export function getTeamColor(tla: string): string {
