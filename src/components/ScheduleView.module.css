@@ -60,7 +60,7 @@
   color: #fff;
   border: none;
   cursor: pointer;
-  z-index: 15;
+  z-index: 9;
   white-space: nowrap;
   animation: fadeInBtn 0.2s ease forwards;
 }
