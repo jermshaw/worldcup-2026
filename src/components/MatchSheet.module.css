@@ -110,10 +110,6 @@
   top: 27px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(22, 22, 26, 0.2);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  border-radius: 10px;
   padding: 9px 20px;
   display: flex;
   flex-direction: column;
@@ -147,6 +143,12 @@
   font-weight: 500;
   color: rgba(255, 255, 255, 0.5);
   line-height: 1.2;
+}
+
+.sep {
+  font-size: 7px;
+  vertical-align: middle;
+  padding: 0 4px;
 }
 
 /* Team blocks — positioned in their respective halves */

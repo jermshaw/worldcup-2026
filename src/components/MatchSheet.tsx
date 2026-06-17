@@ -4,6 +4,7 @@ import { isLive } from '../data';
 import { getTeamColor, getTeamTextColor } from '../teamColors';
 import { FIFA_RANKINGS } from '../fifaRankings';
 import { MATCH_CITY } from '../venueMap';
+import { getVenueMap, getVenueMapSync } from '../venueData';
 import WavingFlag from './WavingFlag';
 import styles from './MatchSheet.module.css';
 
@@ -102,6 +103,9 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   const [dismissing, setDismissing] = useState(false);
   const [detail, setDetail] = useState<MatchDetail | null>(null);
   const [wcEvents, setWcEvents] = useState<MatchEvent[]>([]);
+  const [venueMap, setVenueMap] = useState<Record<string, string>>(getVenueMapSync());
+
+  useEffect(() => { getVenueMap().then(setVenueMap); }, []);
   const [squads, setSquads] = useState<Record<string, TeamSquad>>({});
   const bodyRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -281,9 +285,8 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
           <div className={styles.dragHandle} />
         </div>
 
-        {/* Full-height color bands — outside scroll so they stay fixed */}
-        <div className={styles.bgLeft} style={{ background: homeColor }} />
-        <div className={styles.bgRight} style={{ background: awayColor }} />
+        {/* Full-height gradient background */}
+        <div className={styles.bgLeft} style={{ background: `linear-gradient(102.41deg, ${homeColor} 16%, ${awayColor} 77%)`, width: '100%' }} />
 
         <div ref={bodyRef} className={styles.sheetScroll}>
 
@@ -294,15 +297,15 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
           <div className={styles.gamePill}>
             <span className={styles.gamePillPrimary}>{matchLabel}</span>
             <span className={styles.gamePillSub}>
-              {match.group ? `Group ${match.group} • ` : ''}
+              {match.group ? <>Group {match.group}<span className={styles.sep}> • </span></> : ''}
               {new Date(`${match.date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              {MATCH_CITY[match.apiId] ? ` • ${MATCH_CITY[match.apiId]}` : ''}
+              {(venueMap[`${match.homeTeamId}:${match.awayTeamId}`] || MATCH_CITY[match.apiId]) ? <><span className={styles.sep}> • </span>{venueMap[`${match.homeTeamId}:${match.awayTeamId}`] || MATCH_CITY[match.apiId]}</> : ''}
               {live ? (
-                <> • <span className={styles.pillLiveDot} /> LIVE</>
+                <><span className={styles.sep}> • </span><span className={styles.pillLiveDot} /> LIVE</>
               ) : match.status === 'FINISHED' ? (
-                ' • Finished'
+                <><span className={styles.sep}> • </span>Finished</>
               ) : (
-                ` • ${match.time}`
+                <><span className={styles.sep}> • </span>{match.time}</>
               )}
             </span>
           </div>

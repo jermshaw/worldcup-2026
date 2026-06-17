@@ -240,10 +240,11 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
                   const live = isLive(m);
 
                   return (
-                    <div key={m.id} className={`${cardStyles.card} ${live ? cardStyles.cardLive : ''}`}>
+                    <div key={m.id} className={`${cardStyles.card} ${live ? cardStyles.cardLive : ''}`}
+                      style={{ background: `linear-gradient(122.71deg, ${homeColor} 12%, ${awayColor} 88%)` }}>
                       <div
                         className={`${cardStyles.teamSide} ${cardStyles.teamSideLeft} ${homeDim ? cardStyles.teamSideDim : ''}`}
-                        style={{ background: homeColor, color: getTeamTextColor(m.homeTeamId) }}
+                        style={{ background: 'transparent', color: getTeamTextColor(m.homeTeamId) }}
                       >
                         {home.crest
                           ? <img src={home.crest} className={cardStyles.teamFlagImg} alt={home.name} />
@@ -252,7 +253,7 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
                       </div>
                       <div
                         className={`${cardStyles.teamSide} ${cardStyles.teamSideRight} ${awayDim ? cardStyles.teamSideDim : ''}`}
-                        style={{ background: awayColor, color: getTeamTextColor(m.awayTeamId) }}
+                        style={{ background: 'transparent', color: getTeamTextColor(m.awayTeamId) }}
                       >
                         {away.crest
                           ? <img src={away.crest} className={cardStyles.teamFlagImg} alt={away.name} />

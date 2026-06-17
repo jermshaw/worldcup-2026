@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { getWcScorerMap } from './components/MatchSheet';
+import { getVenueMap } from './venueData';
 
 getWcScorerMap();
+getVenueMap();
 import { computeStandings } from './data';
 import { useLiveScores } from './useLiveScores';
 import ScheduleView from './components/ScheduleView';

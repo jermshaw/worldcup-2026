@@ -4,6 +4,7 @@ import type { Match, Team } from '../data';
 import { formatMatchDate, isLive } from '../data';
 import { getTeamColor, getTeamTextColor } from '../teamColors';
 import { MATCH_CITY } from '../venueMap';
+import { getVenueMap, getVenueMapSync } from '../venueData';
 import MatchSheet from './MatchSheet';
 import styles from './ScheduleView.module.css';
 
@@ -38,7 +39,12 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [showBackToToday, setShowBackToToday] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [venueMap, setVenueMap] = useState<Record<string, string>>(getVenueMapSync());
   const didInitialScroll = useRef(false);
+
+  useEffect(() => {
+    getVenueMap().then(setVenueMap);
+  }, []);
 
   const selectedMatch = selectedMatchId ? matches.find(m => m.id === selectedMatchId) : undefined;
 
@@ -139,11 +145,13 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
                 const centerLabel = m.group ? `Group ${m.group}` : m.stage;
 
                 return (
-                  <button key={m.id} className={`${styles.card} ${live ? styles.cardLive : ''}`} onClick={() => setSelectedMatchId(m.id)}>
+                  <button key={m.id} className={`${styles.card} ${live ? styles.cardLive : ''}`}
+                    style={{ background: `linear-gradient(122.71deg, ${homeColor} 12%, ${awayColor} 88%)` }}
+                    onClick={() => setSelectedMatchId(m.id)}>
                     {/* Home side */}
                     <div
                       className={`${styles.teamSide} ${styles.teamSideLeft} ${homeDim ? styles.teamSideDim : ''}`}
-                      style={{ background: homeColor, color: homeTextColor }}
+                      style={{ background: 'transparent', color: homeTextColor }}
                     >
                       {homeTbd ? (
                         <>
@@ -166,7 +174,7 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
                     {/* Away side */}
                     <div
                       className={`${styles.teamSide} ${styles.teamSideRight} ${awayDim ? styles.teamSideDim : ''}`}
-                      style={{ background: awayColor, color: awayTextColor }}
+                      style={{ background: 'transparent', color: awayTextColor }}
                     >
                       {awayTbd ? (
                         <>
@@ -205,7 +213,9 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
                       )}
                       <div className={styles.matchMeta}>
                         <div className={styles.groupLabel}>{centerLabel}</div>
-                        {MATCH_CITY[m.apiId] && <div className={styles.groupLabel}>{MATCH_CITY[m.apiId]}</div>}
+                        {(venueMap[`${m.homeTeamId}:${m.awayTeamId}`] || MATCH_CITY[m.apiId]) && (
+                          <div className={styles.groupLabel}>{venueMap[`${m.homeTeamId}:${m.awayTeamId}`] || MATCH_CITY[m.apiId]}</div>
+                        )}
                       </div>
                     </div>
                   </button>

@@ -31,7 +31,7 @@ export const TEAM_COLORS: Record<string, string> = {
   GER: '#1F1F1F',   // black
   FRA: '#2840A0',   // navy blue
   ESP: '#F0331A',   // red
-  ENG: '#F0F0F0',   // white ⚠
+  ENG: '#13203A',   // navy
   POR: '#F0331A',   // red
   ITA: '#003082',   // deep navy
   NED: '#FF7100',   // dutch orange
@@ -39,7 +39,7 @@ export const TEAM_COLORS: Record<string, string> = {
   CRO: '#E4321D',   // red
   SRB: '#C6363C',   // red
   SUI: '#F70000',   // red
-  TUR: '#F0F0F0',   // white ⚠
+  TUR: '#A1002F',   // crimson
   POL: '#DC143C',   // red
   DEN: '#C60C30',   // red
   UKR: '#005BBB',   // cobalt blue
@@ -95,8 +95,6 @@ export function getTeamColor(tla: string): string {
   return TEAM_COLORS[tla] ?? '#2a2a3a';
 }
 
-const LIGHT_BG_TEAMS = new Set(['ENG', 'TUR', 'BRA', 'ARG', 'URU', 'COL', 'GHA', 'AUS', 'ECU', 'SEN', 'RSA']);
-
-export function getTeamTextColor(tla: string): string {
-  return LIGHT_BG_TEAMS.has(tla) ? '#16161A' : '#fff';
+export function getTeamTextColor(_tla: string): string {
+  return '#fff';
 }
