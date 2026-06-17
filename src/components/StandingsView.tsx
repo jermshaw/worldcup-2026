@@ -70,15 +70,17 @@ export default function StandingsView({ matches, teams, standings }: Props) {
           {GROUPS.map(group => {
             const rows = standings.get(group) ?? [];
             if (rows.length === 0) return null;
+            const maxPts = Math.max(...rows.map(r => r.pts));
             return (
               <div key={group} className={styles.card}>
                 <p className={styles.groupTitle}>Group {group}</p>
-                {rows.map((row, idx) => {
+                {rows.map(row => {
                   const team = teams.get(row.teamId);
+                  const isTop = row.pts === maxPts;
                   return (
                     <div key={row.teamId}>
                       <div className={styles.rowDivider} />
-                      <div className={`${styles.teamRow} ${idx >= 2 ? styles.teamRowMuted : ''}`}>
+                      <div className={`${styles.teamRow} ${isTop ? styles.teamRowHighlight : styles.teamRowMuted}`}>
                         <div className={styles.teamLeft}>
                           <span className={styles.teamFlag}>{team?.flag ?? ''}</span>
                           <span className={styles.teamName}>{team?.name ?? row.teamId}</span>

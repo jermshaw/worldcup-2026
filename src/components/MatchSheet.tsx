@@ -98,14 +98,41 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   const awayTeam = teams.get(match.awayTeamId);
   const homeColor = getTeamColor(match.homeTeamId);
   const awayColor = getTeamColor(match.awayTeamId);
+  const live = isLive(match);
 
   const [dragY, setDragY] = useState(0);
   const [dismissing, setDismissing] = useState(false);
   const [detail, setDetail] = useState<MatchDetail | null>(null);
   const [wcEvents, setWcEvents] = useState<MatchEvent[]>([]);
   const [venueMap, setVenueMap] = useState<Record<string, string>>(getVenueMapSync());
+  const [timeElapsed, setTimeElapsed] = useState<string | null>(null);
 
   useEffect(() => { getVenueMap().then(setVenueMap); }, []);
+
+  useEffect(() => {
+    if (!live) return;
+    async function fetchClock() {
+      try {
+        const [gamesRes, teamsRes] = await Promise.all([
+          fetch('https://worldcup26.ir/get/games'),
+          fetch('https://worldcup26.ir/get/teams'),
+        ]);
+        if (!gamesRes.ok || !teamsRes.ok) return;
+        const [gamesData, teamsData] = await Promise.all([gamesRes.json(), teamsRes.json()]);
+        const idToFifa = new Map<string, string>(
+          (teamsData.teams as { id: string; fifa_code: string }[]).map((t) => [t.id, t.fifa_code])
+        );
+        const game = (gamesData.games as { home_team_id: string; away_team_id: string; time_elapsed: string }[])
+          .find(g => idToFifa.get(g.home_team_id) === match.homeTeamId && idToFifa.get(g.away_team_id) === match.awayTeamId);
+        if (game?.time_elapsed && game.time_elapsed !== 'notstarted' && game.time_elapsed !== 'FT') {
+          setTimeElapsed(game.time_elapsed);
+        }
+      } catch { /* ignore */ }
+    }
+    fetchClock();
+    const interval = setInterval(fetchClock, 30_000);
+    return () => clearInterval(interval);
+  }, [live, match.homeTeamId, match.awayTeamId]);
   const [squads, setSquads] = useState<Record<string, TeamSquad>>({});
   const bodyRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -250,8 +277,36 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   }, [onClose]);
 
   const hasScore = match.homeScore !== null && match.awayScore !== null;
-  const live = isLive(match);
   const matchLabel = match.matchNumber ? `Match ${match.matchNumber}` : match.stage;
+
+  const todayStr = new Date().toLocaleDateString('en-CA');
+  const tomorrowDate = new Date(); tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowStr = tomorrowDate.toLocaleDateString('en-CA');
+  const isToday = match.date === todayStr;
+  const isTomorrow = match.date === tomorrowStr;
+
+  function pillPrimary() {
+    if (live) {
+      if (timeElapsed) return timeElapsed === 'HT' ? 'HT' : /^\d/.test(timeElapsed) ? `${timeElapsed}'` : timeElapsed;
+      return 'LIVE';
+    }
+    if (isToday) return `Today at ${match.time}`;
+    if (isTomorrow) return `Tomorrow at ${match.time}`;
+    const d = new Date(`${match.date}T12:00:00`);
+    const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+    const monthDay = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return match.status === 'FINISHED'
+      ? `${weekday}, ${monthDay}`
+      : `${weekday}, ${monthDay} at ${match.time}`;
+  }
+
+  const city = venueMap[`${match.homeTeamId}:${match.awayTeamId}`] || MATCH_CITY[match.apiId];
+  function pillSub() {
+    const parts: string[] = [matchLabel];
+    if (match.group) parts.push(`Group ${match.group}`);
+    if (city) parts.push(city);
+    return parts.join(' • ');
+  }
 
   const homeEvents = wcEvents.filter(e => e.teamId === match.homeTeamId);
   const awayEvents = wcEvents.filter(e => e.teamId === match.awayTeamId);
@@ -295,20 +350,12 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
 
           {/* Game label pill — top center */}
           <div className={styles.gamePill}>
-            <span className={styles.gamePillPrimary}>{matchLabel}</span>
-            <span className={styles.gamePillSub}>
-              {match.group ? <>Group {match.group}<span className={styles.sep}> • </span></> : ''}
-              {new Date(`${match.date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              {(venueMap[`${match.homeTeamId}:${match.awayTeamId}`] || MATCH_CITY[match.apiId]) ? <><span className={styles.sep}> • </span>{venueMap[`${match.homeTeamId}:${match.awayTeamId}`] || MATCH_CITY[match.apiId]}</> : ''}
-              {live ? (
-                <><span className={styles.sep}> • </span><span className={styles.pillLiveDot} /> LIVE</>
-              ) : match.status === 'FINISHED' ? (
-                <><span className={styles.sep}> • </span>Finished</>
-              ) : (
-                <><span className={styles.sep}> • </span>{match.time}</>
-              )}
-            </span>
+            <span className={styles.gamePillPrimary}>{pillPrimary()}</span>
+            <span className={styles.gamePillSub}>{pillSub()}</span>
           </div>
+
+          {/* VS label */}
+          <span className={styles.vsLabel}>VS</span>
 
           {/* Home team */}
           <div className={styles.teamBlockLeft} style={{ color: getTeamTextColor(match.homeTeamId) }}>
