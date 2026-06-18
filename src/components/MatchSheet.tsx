@@ -26,6 +26,7 @@ interface Props {
   match: Match;
   teams: Map<string, Team>;
   onClose: () => void;
+  stakeSummary?: string | null;
 }
 
 function formatName(name: string): string {
@@ -36,7 +37,7 @@ function formatName(name: string): string {
 }
 
 
-export default function MatchSheet({ match, teams, onClose }: Props) {
+export default function MatchSheet({ match, teams, onClose, stakeSummary }: Props) {
   const homeTeam = teams.get(match.homeTeamId);
   const awayTeam = teams.get(match.awayTeamId);
   const homeColor = getTeamColor(match.homeTeamId);
@@ -375,6 +376,14 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
 
         {/* Scrollable body */}
         <div className={styles.body}>
+
+          {/* Stake summary */}
+          {stakeSummary && (
+            <>
+              <hr className={styles.summaryDivider} />
+              <p className={styles.summaryText}>{stakeSummary}</p>
+            </>
+          )}
 
           {/* Match highlights */}
           {hasHighlights && (

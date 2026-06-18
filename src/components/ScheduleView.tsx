@@ -404,6 +404,7 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
           match={selectedMatch}
           teams={teams}
           onClose={() => setSelectedMatchId(null)}
+          stakeSummary={getStakeSummary(selectedMatch)}
         />
       )}
     </>
