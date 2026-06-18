@@ -27,7 +27,7 @@ export default async function handler(_req: Request, _ctx: Context) {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=55',
+      'Cache-Control': 'public, max-age=25',
     },
   });
 }

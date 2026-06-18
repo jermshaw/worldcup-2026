@@ -3,8 +3,7 @@ import type { Match, Team } from '../data';
 import { isLive } from '../data';
 import { getTeamColor, getTeamTextColor } from '../teamColors';
 import { FIFA_RANKINGS } from '../fifaRankings';
-import { MATCH_CITY } from '../venueMap';
-import { getVenueMap, getVenueMapSync } from '../venueData';
+import { getCityForVenue } from '../venueData';
 import WavingFlag from './WavingFlag';
 import styles from './MatchSheet.module.css';
 
@@ -14,58 +13,7 @@ interface MatchDetail {
 }
 
 type MatchEventType = 'goal' | 'own_goal' | 'penalty' | 'yellow' | 'red' | 'yellow_red';
-type MatchEvent = { minute: number; type: MatchEventType; teamId: string; playerName: string };
-
-// Module-level cache — fetched once, shared across all MatchSheet instances
-type ScorerEntry = { home: string | null; away: string | null };
-let wcScorerMapCache: Promise<Record<string, ScorerEntry>> | null = null;
-
-export function getWcScorerMap(): Promise<Record<string, ScorerEntry>> {
-  if (!wcScorerMapCache) {
-    wcScorerMapCache = (async () => {
-      const [gamesRes, teamsRes] = await Promise.all([
-        fetch('https://worldcup26.ir/get/games'),
-        fetch('https://worldcup26.ir/get/teams'),
-      ]);
-      if (!gamesRes.ok || !teamsRes.ok) {
-        wcScorerMapCache = null;
-        return {};
-      }
-      const [gamesData, teamsData] = await Promise.all([gamesRes.json(), teamsRes.json()]);
-      const idToFifa = new Map<string, string>(
-        (teamsData.teams as { id: string; fifa_code: string }[]).map(t => [t.id, t.fifa_code])
-      );
-      const map: Record<string, ScorerEntry> = {};
-      for (const g of gamesData.games as { home_team_id: string; away_team_id: string; home_scorers: string; away_scorers: string }[]) {
-        const home = idToFifa.get(g.home_team_id);
-        const away = idToFifa.get(g.away_team_id);
-        if (home && away) map[`${home}:${away}`] = { home: g.home_scorers, away: g.away_scorers };
-      }
-      return map;
-    })().catch(() => {
-      wcScorerMapCache = null;
-      return {};
-    });
-  }
-  return wcScorerMapCache;
-}
-
-function parseScorerString(raw: string | null): Array<{ name: string; minute: number; penalty: boolean; ownGoal: boolean }> {
-  if (!raw || raw === 'null' || raw === '{}') return [];
-  const inner = raw.replace(/^\{|\}$/g, '');
-  if (!inner || inner === 'null') return [];
-  const found = inner.match(/"([^"]+)"/g);
-  if (!found) return [];
-  return found.map(m => {
-    const entry = m.slice(1, -1);
-    const penalty = /\(p\)/i.test(entry);
-    const ownGoal = /\(og\)|\(o\.g\.\)/i.test(entry);
-    const minuteMatch = entry.match(/(\d+)(?:\+\d+)?'/);
-    const minute = minuteMatch ? parseInt(minuteMatch[1]) : 0;
-    const name = entry.replace(/\s+\d+(?:\+\d+)?'.*$/, '').trim();
-    return { name, minute, penalty, ownGoal };
-  });
-}
+type MatchEvent = { minute: number; minuteLabel: string; type: MatchEventType; teamId: string; playerName: string };
 
 interface SquadPlayer {
   id: number;
@@ -104,35 +52,6 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   const [dismissing, setDismissing] = useState(false);
   const [detail, setDetail] = useState<MatchDetail | null>(null);
   const [wcEvents, setWcEvents] = useState<MatchEvent[]>([]);
-  const [venueMap, setVenueMap] = useState<Record<string, string>>(getVenueMapSync());
-  const [timeElapsed, setTimeElapsed] = useState<string | null>(null);
-
-  useEffect(() => { getVenueMap().then(setVenueMap); }, []);
-
-  useEffect(() => {
-    if (!live) return;
-    async function fetchClock() {
-      try {
-        const [gamesRes, teamsRes] = await Promise.all([
-          fetch('https://worldcup26.ir/get/games'),
-          fetch('https://worldcup26.ir/get/teams'),
-        ]);
-        if (!gamesRes.ok || !teamsRes.ok) return;
-        const [gamesData, teamsData] = await Promise.all([gamesRes.json(), teamsRes.json()]);
-        const idToFifa = new Map<string, string>(
-          (teamsData.teams as { id: string; fifa_code: string }[]).map((t) => [t.id, t.fifa_code])
-        );
-        const game = (gamesData.games as { home_team_id: string; away_team_id: string; time_elapsed: string }[])
-          .find(g => idToFifa.get(g.home_team_id) === match.homeTeamId && idToFifa.get(g.away_team_id) === match.awayTeamId);
-        if (game?.time_elapsed && game.time_elapsed !== 'notstarted' && game.time_elapsed !== 'FT') {
-          setTimeElapsed(game.time_elapsed);
-        }
-      } catch { /* ignore */ }
-    }
-    fetchClock();
-    const interval = setInterval(fetchClock, 30_000);
-    return () => clearInterval(interval);
-  }, [live, match.homeTeamId, match.awayTeamId]);
   const [squads, setSquads] = useState<Record<string, TeamSquad>>({});
   const bodyRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -155,21 +74,6 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   }, []);
 
   useEffect(() => {
-    getWcScorerMap().then(map => {
-      const key = `${match.homeTeamId}:${match.awayTeamId}`;
-      const entry = map[key];
-      if (!entry) return;
-      const goals: MatchEvent[] = [];
-      for (const s of parseScorerString(entry.home))
-        goals.push({ minute: s.minute, type: s.ownGoal ? 'own_goal' : s.penalty ? 'penalty' : 'goal', teamId: match.homeTeamId, playerName: s.name });
-      for (const s of parseScorerString(entry.away))
-        goals.push({ minute: s.minute, type: s.ownGoal ? 'own_goal' : s.penalty ? 'penalty' : 'goal', teamId: match.awayTeamId, playerName: s.name });
-      goals.sort((a, b) => a.minute - b.minute);
-      setWcEvents(goals);
-    });
-  }, [match.homeTeamId, match.awayTeamId]);
-
-  useEffect(() => {
     fetch('/.netlify/functions/squads')
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setSquads(data); })
@@ -181,6 +85,7 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) return;
+        // Stats
         const getStat = (type: string) =>
           (data.statistics ?? []).find((s: { type: string }) => s.type === type);
         const poss = getStat('BALL_POSSESSION');
@@ -193,9 +98,36 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
             ? { home: parseInt(shots.home ?? '0'), away: parseInt(shots.away ?? '0') }
             : null,
         });
+        // Goals
+        const homeId: number = data.homeTeam?.id;
+        const awayId: number = data.awayTeam?.id;
+        const goals: MatchEvent[] = [];
+        for (const g of (data.goals ?? []) as Array<{
+          minute: number | null;
+          injuryTime?: number | null;
+          type: string;
+          team: { id: number; name: string };
+          scorer: { name: string } | null;
+        }>) {
+          if (!g.scorer?.name) continue;
+          const isOG = g.type === 'OWN';
+          const isPen = g.type === 'PENALTY';
+          const benefitsHome = isOG ? g.team.id === awayId : g.team.id === homeId;
+          const min = g.minute ?? 0;
+          const minuteLabel = g.injuryTime ? `${min}+${g.injuryTime}` : String(min);
+          goals.push({
+            minute: min,
+            minuteLabel,
+            type: isOG ? 'own_goal' : isPen ? 'penalty' : 'goal',
+            teamId: benefitsHome ? match.homeTeamId : match.awayTeamId,
+            playerName: isOG ? `${g.scorer.name} (OG)` : g.scorer.name,
+          });
+        }
+        goals.sort((a, b) => a.minute - b.minute);
+        setWcEvents(goals);
       })
       .catch(() => null);
-  }, [match.apiId]);
+  }, [match.apiId, match.homeTeamId, match.awayTeamId]);
 
   function dismiss() {
     setDismissing(true);
@@ -287,20 +219,20 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
 
   function pillPrimary() {
     if (live) {
-      if (timeElapsed) return timeElapsed === 'HT' ? 'HT' : /^\d/.test(timeElapsed) ? `${timeElapsed}'` : timeElapsed;
+      const te = match.timeElapsed;
+      if (te) return te === 'HT' ? 'Halftime' : /^\d/.test(te) ? `LIVE - ${te}'` : te;
       return 'LIVE';
     }
+    if (match.status === 'FINISHED') return 'Finished';
     if (isToday) return `Today at ${match.time}`;
     if (isTomorrow) return `Tomorrow at ${match.time}`;
     const d = new Date(`${match.date}T12:00:00`);
     const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
     const monthDay = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return match.status === 'FINISHED'
-      ? `${weekday}, ${monthDay}`
-      : `${weekday}, ${monthDay} at ${match.time}`;
+    return `${weekday}, ${monthDay} at ${match.time}`;
   }
 
-  const city = venueMap[`${match.homeTeamId}:${match.awayTeamId}`] || MATCH_CITY[match.apiId];
+  const city = getCityForVenue(match.venue);
   function pillSub() {
     const parts: string[] = [matchLabel];
     if (match.group) parts.push(`Group ${match.group}`);
@@ -406,7 +338,7 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
                   {homeEvents.map((ev, i) => (
                     <div key={i} className={styles.playerRow}>
                       <span className={styles.playerName}>{formatName(ev.playerName)}</span>
-                      <span className={styles.playerNum}>{ev.minute}'</span>
+                      <span className={styles.playerNum}>{ev.minuteLabel}'</span>
                     </div>
                   ))}
                 </div>
@@ -414,7 +346,7 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
                   {awayEvents.map((ev, i) => (
                     <div key={i} className={styles.playerRow}>
                       <span className={styles.playerName}>{formatName(ev.playerName)}</span>
-                      <span className={styles.playerNum}>{ev.minute}'</span>
+                      <span className={styles.playerNum}>{ev.minuteLabel}'</span>
                     </div>
                   ))}
                 </div>

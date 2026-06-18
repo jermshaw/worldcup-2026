@@ -2,11 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Match, Team } from './data';
 import { buildFromApi } from './data';
 import type { ApiResponse } from './api';
-import { getWcScoreMap } from './venueData';
 
 export type LiveStatus = 'loading' | 'live' | 'error';
 
-const CACHE_KEY = 'wc2026_scores_v1';
+const CACHE_KEY = 'wc2026_scores_v2';
 
 function readCache(): { matches: Match[]; teams: Map<string, Team> } | null {
   try {
@@ -44,21 +43,7 @@ export function useLiveScores() {
       writeCache(data);
       const { matches: newMatches, teams: newTeams } = buildFromApi(data);
 
-      // Overlay scores from worldcup26.ir — faster and more reliable than football-data.org
-      const wcScores = await getWcScoreMap();
-      for (const m of newMatches) {
-        const wc = wcScores[`${m.homeTeamId}:${m.awayTeamId}`];
-        if (wc) {
-          m.homeScore = wc.home;
-          m.awayScore = wc.away;
-          // Update status so the app treats this as a scored match
-          if (m.status === 'SCHEDULED' || m.status === 'TIMED') {
-            m.status = wc.timeElapsed === 'FT' ? 'FINISHED' : 'IN_PLAY';
-          }
-        }
-      }
-
-      // On subsequent fetches, preserve any scores not yet in worldcup26.ir
+      // On subsequent fetches, preserve any scores not yet updated
       if (matchesRef.current.length > 0) {
         const prevById = new Map(matchesRef.current.map(m => [m.apiId, m]));
         for (const m of newMatches) {
@@ -82,7 +67,7 @@ export function useLiveScores() {
 
   useEffect(() => {
     fetchScores();
-    const interval = setInterval(fetchScores, 60_000);
+    const interval = setInterval(fetchScores, 30_000);
     return () => clearInterval(interval);
   }, [fetchScores]);
 

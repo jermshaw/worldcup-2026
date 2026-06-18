@@ -251,6 +251,21 @@
   gap: 2px;
 }
 
+.overlayHalftime {
+  width: 106px;
+  height: auto;
+  padding: 5px 0;
+  gap: 2px;
+}
+
+.halftimeLabel {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #fff;
+  white-space: nowrap;
+}
+
 .liveBadge {
   display: flex;
   align-items: center;

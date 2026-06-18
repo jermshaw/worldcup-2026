@@ -26,6 +26,8 @@ export interface ApiMatch {
   id: number;
   utcDate: string;
   status: 'SCHEDULED' | 'TIMED' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'SUSPENDED' | 'POSTPONED' | 'CANCELLED' | 'AWARDED';
+  minute?: number | null;
+  injuryTime?: number | null;
   stage: string;
   group: string | null;
   matchday: number | null;

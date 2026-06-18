@@ -28,6 +28,7 @@ export interface Match {
   homeScore: number | null;
   awayScore: number | null;
   status: string;
+  timeElapsed?: string;
 }
 
 export function isLive(m: Match): boolean {
@@ -71,6 +72,15 @@ function parseStage(raw: string): string {
     FINAL: 'Final',
   };
   return map[raw] ?? raw;
+}
+
+function computeTimeElapsed(status: string, minute: number | null, injuryTime: number | null): string | undefined {
+  if (status === 'PAUSED') return 'HT';
+  if (status === 'FINISHED') return 'FT';
+  if (status === 'IN_PLAY' && minute !== null) {
+    return injuryTime ? `${minute}+${injuryTime}` : String(minute);
+  }
+  return undefined;
 }
 
 export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<string, Team> } {
@@ -124,6 +134,7 @@ export function buildFromApi(data: ApiResponse): { matches: Match[]; teams: Map<
       homeScore: hasScore ? (m.score.fullTime.home ?? null) : null,
       awayScore: hasScore ? (m.score.fullTime.away ?? null) : null,
       status: m.status,
+      timeElapsed: computeTimeElapsed(m.status, m.minute ?? null, m.injuryTime ?? null),
     });
   }
 

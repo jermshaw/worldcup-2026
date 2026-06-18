@@ -3,8 +3,7 @@ import type React from 'react';
 import type { Match, Team } from '../data';
 import { formatMatchDate, isLive } from '../data';
 import { getTeamColor, getTeamTextColor } from '../teamColors';
-import { MATCH_CITY } from '../venueMap';
-import { getVenueMap, getVenueMapSync } from '../venueData';
+import { getCityForVenue } from '../venueData';
 import MatchSheet from './MatchSheet';
 import styles from './ScheduleView.module.css';
 
@@ -39,12 +38,7 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [showBackToToday, setShowBackToToday] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
-  const [venueMap, setVenueMap] = useState<Record<string, string>>(getVenueMapSync());
   const didInitialScroll = useRef(false);
-
-  useEffect(() => {
-    getVenueMap().then(setVenueMap);
-  }, []);
 
   const selectedMatch = selectedMatchId ? matches.find(m => m.id === selectedMatchId) : undefined;
 
@@ -142,10 +136,11 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
                 const awayTextColor = awayTbd ? '#fff' : getTeamTextColor(m.awayTeamId);
 
                 const live = isLive(m);
+                const isHalftime = m.timeElapsed === 'HT';
                 const centerLabel = m.group ? `Group ${m.group}` : m.stage;
 
                 return (
-                  <button key={m.id} className={`${styles.card} ${live ? styles.cardLive : ''}`}
+                  <button key={m.id} className={styles.card}
                     style={{ background: `linear-gradient(122.71deg, ${homeColor} 12%, ${awayColor} 88%)` }}
                     onClick={() => setSelectedMatchId(m.id)}>
                     {/* Home side */}
@@ -195,26 +190,27 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
                     </div>
 
                     {/* Center overlay */}
-                    <div className={`${styles.overlay} ${live ? styles.overlayLive : ''}`}>
-                      {live && (
-                        <div className={styles.liveBadge}>
-                          <span className={styles.liveDot} />
-                          <span className={styles.liveText}>LIVE</span>
-                        </div>
-                      )}
+                    <div className={`${styles.overlay} ${(live || isHalftime) ? styles.overlayHalftime : ''}`}>
                       {m.homeScore !== null && m.awayScore !== null ? (
-                        <div className={styles.score}>
-                          <span className={styles.scoreNum}>{m.homeScore}</span>
-                          <span className={styles.scoreDash}>&nbsp;-&nbsp;</span>
-                          <span className={styles.scoreNum}>{m.awayScore}</span>
-                        </div>
+                        <>
+                          {(live || isHalftime) && (
+                            <div className={styles.halftimeLabel}>
+                              {isHalftime ? 'Halftime' : m.timeElapsed && /^\d/.test(m.timeElapsed) ? `LIVE - ${m.timeElapsed}'` : 'LIVE'}
+                            </div>
+                          )}
+                          <div className={styles.score}>
+                            <span className={styles.scoreNum}>{m.homeScore}</span>
+                            <span className={styles.scoreDash}>&nbsp;-&nbsp;</span>
+                            <span className={styles.scoreNum}>{m.awayScore}</span>
+                          </div>
+                        </>
                       ) : (
                         <div className={styles.time}>{m.time}</div>
                       )}
                       <div className={styles.matchMeta}>
                         <div className={styles.groupLabel}>{centerLabel}</div>
-                        {(venueMap[`${m.homeTeamId}:${m.awayTeamId}`] || MATCH_CITY[m.apiId]) && (
-                          <div className={styles.groupLabel}>{venueMap[`${m.homeTeamId}:${m.awayTeamId}`] || MATCH_CITY[m.apiId]}</div>
+                        {m.venue && (
+                          <div className={styles.groupLabel}>{getCityForVenue(m.venue)}</div>
                         )}
                       </div>
                     </div>
