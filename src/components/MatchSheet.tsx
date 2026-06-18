@@ -15,16 +15,11 @@ interface MatchDetail {
 type MatchEventType = 'goal' | 'own_goal' | 'penalty' | 'yellow' | 'red' | 'yellow_red' | 'sub';
 type MatchEvent = { minute: number; minuteLabel: string; type: MatchEventType; teamId: string; playerName: string; playerOutName?: string };
 
-interface SquadPlayer {
+interface LineupPlayer {
   id: number;
   name: string;
   position: string | null;
-  dateOfBirth: string | null;
-}
-
-interface TeamSquad {
-  coach: string | null;
-  squad: SquadPlayer[];
+  shirtNumber: number | null;
 }
 
 interface Props {
@@ -52,7 +47,8 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   const [dismissing, setDismissing] = useState(false);
   const [detail, setDetail] = useState<MatchDetail | null>(null);
   const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
-  const [squads, setSquads] = useState<Record<string, TeamSquad>>({});
+  const [homeLineup, setHomeLineup] = useState<LineupPlayer[]>([]);
+  const [awayLineup, setAwayLineup] = useState<LineupPlayer[]>([]);
   const bodyRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const touchActive = useRef(false);
@@ -71,13 +67,6 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
       document.body.style.overflow = prev;
       document.body.style.paddingRight = prevPad;
     };
-  }, []);
-
-  useEffect(() => {
-    fetch('/.netlify/functions/squads')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setSquads(data); })
-      .catch(() => null);
   }, []);
 
   useEffect(() => {
@@ -163,6 +152,10 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
 
         events.sort((a, b) => a.minute - b.minute);
         setMatchEvents(events);
+
+        // Lineups
+        setHomeLineup((data.homeTeam?.lineup ?? []) as LineupPlayer[]);
+        setAwayLineup((data.awayTeam?.lineup ?? []) as LineupPlayer[]);
       })
       .catch(() => null);
   }, [match.apiId, match.homeTeamId, match.awayTeamId]);
@@ -288,11 +281,7 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   const awayBookings = matchEvents.filter(e => e.teamId === match.awayTeamId && isBooking(e));
   const hasHighlights = matchEvents.length > 0;
 
-  const homeSquad = squads[match.homeTeamId]?.squad ?? [];
-  const awaySquad = squads[match.awayTeamId]?.squad ?? [];
-  const hasSquads = homeSquad.length > 0 || awaySquad.length > 0;
-
-  const currentYear = new Date().getFullYear();
+  const hasLineup = homeLineup.length > 0 || awayLineup.length > 0;
 
   return (
     <div
@@ -478,31 +467,27 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
             </div>
           )}
 
-          {/* Squads — single card, two flat columns */}
-          {hasSquads && (
+          {/* Line-ups */}
+          {hasLineup && (
             <div className={styles.card}>
-              <p className={styles.cardTitle}>Squads</p>
+              <p className={styles.cardTitle}>Line-ups</p>
               <div className={styles.twoCol}>
                 <div className={styles.col}>
-                  {homeSquad.map(p => (
+                  {homeLineup.map(p => (
                     <div key={p.id} className={styles.playerRow}>
                       <span className={styles.playerName}>{p.name}</span>
-                      {p.dateOfBirth && (
-                        <span className={styles.playerNum}>
-                          {currentYear - new Date(p.dateOfBirth).getFullYear()}
-                        </span>
+                      {p.shirtNumber != null && (
+                        <span className={styles.playerNum}>{p.shirtNumber}</span>
                       )}
                     </div>
                   ))}
                 </div>
                 <div className={styles.col}>
-                  {awaySquad.map(p => (
+                  {awayLineup.map(p => (
                     <div key={p.id} className={styles.playerRow}>
                       <span className={styles.playerName}>{p.name}</span>
-                      {p.dateOfBirth && (
-                        <span className={styles.playerNum}>
-                          {currentYear - new Date(p.dateOfBirth).getFullYear()}
-                        </span>
+                      {p.shirtNumber != null && (
+                        <span className={styles.playerNum}>{p.shirtNumber}</span>
                       )}
                     </div>
                   ))}
