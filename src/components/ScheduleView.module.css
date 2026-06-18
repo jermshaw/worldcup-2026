@@ -98,14 +98,28 @@
 .matchList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+}
+
+/* ── Match item wrapper ──────────────────────────────── */
+.matchItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stakeSummary {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.45;
+  padding: 0 4px;
 }
 
 /* ── Match card ──────────────────────────────────────── */
 .card {
-  position: relative;
-  height: 106px;
   display: flex;
+  flex-direction: column;
   border-radius: var(--radius-card);
   overflow: hidden;
   width: 100%;
@@ -113,6 +127,23 @@
   border: none;
   cursor: pointer;
   text-align: left;
+}
+
+.cardTop {
+  position: relative;
+  height: 106px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.cardSummary {
+  padding: 10px 16px 12px;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.65);
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .teamSide {

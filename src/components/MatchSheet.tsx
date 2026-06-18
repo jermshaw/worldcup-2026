@@ -153,6 +153,20 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
         events.sort((a, b) => a.minute - b.minute);
         setMatchEvents(events);
 
+        // Cache highlights for schedule summary cards
+        if (match.status === 'FINISHED') {
+          const goalCounts: Record<string, number> = {};
+          for (const e of events) {
+            if (e.type === 'goal' || e.type === 'penalty') {
+              const base = e.playerName.replace(/ \([^)]+\)$/, '');
+              goalCounts[base] = (goalCounts[base] ?? 0) + 1;
+            }
+          }
+          const hatTricks = Object.entries(goalCounts).filter(([, n]) => n >= 3).map(([name]) => name);
+          const redCards = events.filter(e => e.type === 'red' || e.type === 'yellow_red').map(e => e.playerName);
+          try { localStorage.setItem(`wc2026_highlights_${match.id}`, JSON.stringify({ hatTricks, redCards })); } catch { /* ignore */ }
+        }
+
         // Lineups
         setHomeLineup((data.homeTeam?.lineup ?? []) as LineupPlayer[]);
         setAwayLineup((data.awayTeam?.lineup ?? []) as LineupPlayer[]);
