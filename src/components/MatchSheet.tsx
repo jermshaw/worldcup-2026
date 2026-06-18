@@ -12,8 +12,8 @@ interface MatchDetail {
   shotsOnTarget: { home: number; away: number } | null;
 }
 
-type MatchEventType = 'goal' | 'own_goal' | 'penalty' | 'yellow' | 'red' | 'yellow_red';
-type MatchEvent = { minute: number; minuteLabel: string; type: MatchEventType; teamId: string; playerName: string };
+type MatchEventType = 'goal' | 'own_goal' | 'penalty' | 'yellow' | 'red' | 'yellow_red' | 'sub';
+type MatchEvent = { minute: number; minuteLabel: string; type: MatchEventType; teamId: string; playerName: string; playerOutName?: string };
 
 interface SquadPlayer {
   id: number;
@@ -51,7 +51,7 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
   const [dragY, setDragY] = useState(0);
   const [dismissing, setDismissing] = useState(false);
   const [detail, setDetail] = useState<MatchDetail | null>(null);
-  const [wcEvents, setWcEvents] = useState<MatchEvent[]>([]);
+  const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
   const [squads, setSquads] = useState<Record<string, TeamSquad>>({});
   const bodyRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -98,10 +98,12 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
             ? { home: parseInt(shots.home ?? '0'), away: parseInt(shots.away ?? '0') }
             : null,
         });
-        // Goals
+        // Build all match events
         const homeId: number = data.homeTeam?.id;
         const awayId: number = data.awayTeam?.id;
-        const goals: MatchEvent[] = [];
+        const events: MatchEvent[] = [];
+
+        // Goals
         for (const g of (data.goals ?? []) as Array<{
           minute: number | null;
           injuryTime?: number | null;
@@ -115,16 +117,52 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
           const benefitsHome = isOG ? g.team.id === awayId : g.team.id === homeId;
           const min = g.minute ?? 0;
           const minuteLabel = g.injuryTime ? `${min}+${g.injuryTime}` : String(min);
-          goals.push({
-            minute: min,
-            minuteLabel,
+          events.push({
+            minute: min, minuteLabel,
             type: isOG ? 'own_goal' : isPen ? 'penalty' : 'goal',
             teamId: benefitsHome ? match.homeTeamId : match.awayTeamId,
-            playerName: isOG ? `${g.scorer.name} (OG)` : g.scorer.name,
+            playerName: isOG ? `${g.scorer.name} (OG)` : isPen ? `${g.scorer.name} (P)` : g.scorer.name,
           });
         }
-        goals.sort((a, b) => a.minute - b.minute);
-        setWcEvents(goals);
+
+        // Substitutions
+        for (const s of (data.substitutions ?? []) as Array<{
+          minute: number | null;
+          team: { id: number };
+          playerIn: { name: string } | null;
+          playerOut: { name: string } | null;
+        }>) {
+          if (!s.playerIn?.name) continue;
+          const min = s.minute ?? 0;
+          events.push({
+            minute: min, minuteLabel: String(min),
+            type: 'sub',
+            teamId: s.team.id === homeId ? match.homeTeamId : match.awayTeamId,
+            playerName: s.playerIn.name,
+            playerOutName: s.playerOut?.name,
+          });
+        }
+
+        // Bookings
+        for (const b of (data.bookings ?? []) as Array<{
+          minute: number | null;
+          team: { id: number };
+          player: { name: string } | null;
+          card: string;
+        }>) {
+          if (!b.player?.name) continue;
+          const min = b.minute ?? 0;
+          const cardType: MatchEventType = b.card === 'RED' ? 'red' : b.card === 'YELLOW_RED' ? 'yellow_red' : 'yellow';
+          events.push({
+            minute: min, minuteLabel: String(min),
+            type: cardType,
+            teamId: b.team.id === homeId ? match.homeTeamId : match.awayTeamId,
+            playerName: b.player.name,
+          });
+        }
+
+        events.sort((a, b) => a.minute - b.minute);
+        setMatchEvents(events);
       })
       .catch(() => null);
   }, [match.apiId, match.homeTeamId, match.awayTeamId]);
@@ -240,9 +278,15 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
     return parts.join(' • ');
   }
 
-  const homeEvents = wcEvents.filter(e => e.teamId === match.homeTeamId);
-  const awayEvents = wcEvents.filter(e => e.teamId === match.awayTeamId);
-  const hasEvents = homeEvents.length > 0 || awayEvents.length > 0;
+  const isGoal = (e: MatchEvent) => e.type === 'goal' || e.type === 'own_goal' || e.type === 'penalty';
+  const isBooking = (e: MatchEvent) => e.type === 'yellow' || e.type === 'red' || e.type === 'yellow_red';
+  const homeGoals = matchEvents.filter(e => e.teamId === match.homeTeamId && isGoal(e));
+  const awayGoals = matchEvents.filter(e => e.teamId === match.awayTeamId && isGoal(e));
+  const homeSubs = matchEvents.filter(e => e.teamId === match.homeTeamId && e.type === 'sub');
+  const awaySubs = matchEvents.filter(e => e.teamId === match.awayTeamId && e.type === 'sub');
+  const homeBookings = matchEvents.filter(e => e.teamId === match.homeTeamId && isBooking(e));
+  const awayBookings = matchEvents.filter(e => e.teamId === match.awayTeamId && isBooking(e));
+  const hasHighlights = matchEvents.length > 0;
 
   const homeSquad = squads[match.homeTeamId]?.squad ?? [];
   const awaySquad = squads[match.awayTeamId]?.squad ?? [];
@@ -329,28 +373,82 @@ export default function MatchSheet({ match, teams, onClose }: Props) {
         {/* Scrollable body */}
         <div className={styles.body}>
 
-          {/* Goals scored */}
-          {hasEvents && (
+          {/* Match highlights */}
+          {hasHighlights && (
             <div className={styles.card}>
-              <p className={styles.cardTitle}>Goals scored</p>
-              <div className={styles.twoCol}>
-                <div className={styles.col}>
-                  {homeEvents.map((ev, i) => (
-                    <div key={i} className={styles.playerRow}>
-                      <span className={styles.playerName}>{formatName(ev.playerName)}</span>
-                      <span className={styles.playerNum}>{ev.minuteLabel}'</span>
+              <p className={styles.cardTitle}>Match highlights</p>
+
+              {(homeGoals.length > 0 || awayGoals.length > 0) && (
+                <div className={styles.highlightSection}>
+                  <p className={styles.sectionLabel}>Goals</p>
+                  <div className={styles.twoCol}>
+                    <div className={styles.col}>
+                      {homeGoals.map((ev, i) => (
+                        <div key={i} className={styles.eventItem}>
+                          <span className={styles.iconBall}>⚽</span>
+                          <span className={styles.eventText}>{formatName(ev.playerName)} <span className={styles.eventMinInline}>{ev.minuteLabel}'</span></span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className={styles.col}>
-                  {awayEvents.map((ev, i) => (
-                    <div key={i} className={styles.playerRow}>
-                      <span className={styles.playerName}>{formatName(ev.playerName)}</span>
-                      <span className={styles.playerNum}>{ev.minuteLabel}'</span>
+                    <div className={styles.col}>
+                      {awayGoals.map((ev, i) => (
+                        <div key={i} className={styles.eventItem}>
+                          <span className={styles.iconBall}>⚽</span>
+                          <span className={styles.eventText}>{formatName(ev.playerName)} <span className={styles.eventMinInline}>{ev.minuteLabel}'</span></span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {(homeSubs.length > 0 || awaySubs.length > 0) && (
+                <div className={styles.highlightSection}>
+                  <p className={styles.sectionLabel}>Substitutions</p>
+                  <div className={styles.twoCol}>
+                    <div className={styles.col}>
+                      {homeSubs.map((ev, i) => (
+                        <div key={i} className={styles.eventItem}>
+                          <span className={styles.iconSub}>↑</span>
+                          <span className={styles.eventText}>{formatName(ev.playerName)} <span className={styles.eventMinInline}>{ev.minuteLabel}'</span></span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className={styles.col}>
+                      {awaySubs.map((ev, i) => (
+                        <div key={i} className={styles.eventItem}>
+                          <span className={styles.iconSub}>↑</span>
+                          <span className={styles.eventText}>{formatName(ev.playerName)} <span className={styles.eventMinInline}>{ev.minuteLabel}'</span></span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(homeBookings.length > 0 || awayBookings.length > 0) && (
+                <div className={styles.highlightSection}>
+                  <p className={styles.sectionLabel}>Bookings</p>
+                  <div className={styles.twoCol}>
+                    <div className={styles.col}>
+                      {homeBookings.map((ev, i) => (
+                        <div key={i} className={styles.eventItem}>
+                          <div className={ev.type === 'red' ? styles.iconRed : ev.type === 'yellow_red' ? styles.iconYellowRed : styles.iconYellow} />
+                          <span className={styles.eventText}>{formatName(ev.playerName)} <span className={styles.eventMinInline}>{ev.minuteLabel}'</span></span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className={styles.col}>
+                      {awayBookings.map((ev, i) => (
+                        <div key={i} className={styles.eventItem}>
+                          <div className={ev.type === 'red' ? styles.iconRed : ev.type === 'yellow_red' ? styles.iconYellowRed : styles.iconYellow} />
+                          <span className={styles.eventText}>{formatName(ev.playerName)} <span className={styles.eventMinInline}>{ev.minuteLabel}'</span></span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
