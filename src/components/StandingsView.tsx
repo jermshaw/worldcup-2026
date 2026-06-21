@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from 'react';
 import type { Match, Team, Group, StandingRow } from '../data';
 import { GROUPS } from '../data';
+import { getGroupSummary } from '../utils/stakeSummary';
 import styles from './StandingsView.module.css';
 
 interface Props {
@@ -74,6 +75,7 @@ export default function StandingsView({ matches, teams, standings }: Props) {
             return (
               <div key={group} className={styles.card}>
                 <p className={styles.groupTitle}>Group {group}</p>
+                {(() => { const s = getGroupSummary(rows, teams, group); return s ? <p className={styles.groupSummary}>{s}</p> : null; })()}
                 {rows.map((row, idx) => {
                   const team = teams.get(row.teamId);
                   const isAdvancing = idx < 2;

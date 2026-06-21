@@ -162,3 +162,79 @@ export function getStakeSummary(
     return `${leaderName} lead Group ${m.group} on ${leaderPts} pts. ${trailerName} need a win to stay in the tournament.`;
   return `${leaderName} lead on ${leaderPts} pts in Group ${m.group}. ${trailerName} trail on ${trailerPts} and need a result.`;
 }
+
+export function getGroupSummary(
+  rows: StandingRow[],
+  teams: Map<string, Team>,
+  group: string,
+): string | null {
+  if (rows.length < 4) return null;
+
+  const name = (id: string) => teams.get(id)?.name ?? id;
+  const [r1, r2, r3, r4] = rows;
+  const n1 = name(r1.teamId), n2 = name(r2.teamId);
+  const n3 = name(r3.teamId), n4 = name(r4.teamId);
+
+  const totalPlayed = rows.reduce((s, r) => s + r.mp, 0) / 2;
+  if (totalPlayed === 0) return null;
+
+  // max pts each team can still reach
+  const maxPts = (r: StandingRow) => r.pts + 3 * (3 - r.mp);
+
+  const thirdElim  = maxPts(r3) < r2.pts;
+  const fourthElim = maxPts(r4) < r2.pts;
+
+  // All 6 games done
+  if (totalPlayed >= 6) {
+    if (r1.pts === r2.pts)
+      return `${n1} and ${n2} advance on equal points. ${n3} and ${n4} are out.`;
+    return `${n1} and ${n2} advance. ${n3} and ${n4} are eliminated.`;
+  }
+
+  // Both spots mathematically clinched
+  if (thirdElim && fourthElim) {
+    if (totalPlayed === 4)
+      return `${n1} and ${n2} have qualified. Matchday 3 is a dead rubber for ${n3} and ${n4}.`;
+    return `${n1} and ${n2} are through. ${n3} and ${n4} cannot advance.`;
+  }
+
+  // Bottom two eliminated (but not top two locked yet — shouldn't happen, but just in case)
+  if (thirdElim) {
+    return `${n3} cannot advance. ${n4} still has a slim chance of reaching the top two.`;
+  }
+
+  // After matchday 2 (4 played, 2 remain)
+  if (totalPlayed === 4) {
+    if (r1.pts >= 6 && r2.pts >= 3) {
+      const gap = r2.pts - r3.pts;
+      if (gap >= 3)
+        return `${n1} lead the group. ${n2} hold 2nd; ${n3} and ${n4} need wins and a favour on matchday 3.`;
+      return `${n1} lead, but 2nd place is unsettled going into matchday 3.`;
+    }
+    if (r2.pts - r3.pts <= 1)
+      return `It's tight in Group ${group}. The final round could still shuffle the top two.`;
+    if (r3.pts === 0)
+      return `${n1} and ${n2} are in control. ${n3} and ${n4} are winless and running out of time.`;
+    return `${n1} and ${n2} lead, but ${n3} and ${n4} are still alive heading into matchday 3.`;
+  }
+
+  // After matchday 1 (2 played, 4 remain)
+  if (totalPlayed === 2) {
+    if (r1.pts === 3 && r2.pts === 3)
+      return `Both openers were wins. ${n1} and ${n2} lead, but four games remain.`;
+    if (r1.pts === 3 && r2.pts === 1 && r3.pts === 1)
+      return `${n1} lead early. ${n2} and ${n3} drew. ${n4} are bottom after defeat.`;
+    if (r1.pts === 1 && r4.pts === 1)
+      return `Both opening games were draws. All four teams level on 1 pt. Matchday 2 will separate them.`;
+    if (r1.pts === 3 && r4.pts === 0)
+      return `Early leaders ${n1} and ${n2} after matchday 1. Four games still to play.`;
+    return `Early days in Group ${group}. All four teams still in contention.`;
+  }
+
+  // Partial matchday 3 (5 played)
+  if (totalPlayed === 5) {
+    return `One game left in Group ${group}. ${n1} and ${n2} currently in the advancing positions.`;
+  }
+
+  return null;
+}

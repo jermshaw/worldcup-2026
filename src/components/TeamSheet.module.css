@@ -19,6 +19,7 @@
 }
 
 .sheet {
+  position: relative;
   width: 100%;
   max-width: 430px;
   max-height: 90vh;
@@ -31,12 +32,25 @@
   user-select: none;
 }
 
+.dragZone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  z-index: 10;
+  pointer-events: none;
+}
+
 .dragHandle {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 36px;
   height: 4px;
   background: rgba(255, 255, 255, 0.35);
   border-radius: 2px;
-  margin: 10px auto 0;
 }
 
 @keyframes fadeIn {

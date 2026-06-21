@@ -194,7 +194,9 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
         onPointerCancel={onPointerUp}
       >
         {/* Drag handle */}
-        <div className={styles.dragHandle} />
+        <div className={styles.dragZone}>
+          <div className={styles.dragHandle} />
+        </div>
 
         {/* Header */}
         <div className={styles.header}>
