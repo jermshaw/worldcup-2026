@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { Match, Team, StandingRow } from '../data';
-import { formatMatchDate, isLive } from '../data';
+import { formatMatchDate, isLive, computeStandings } from '../data';
+import { getStakeSummary } from '../utils/stakeSummary';
 import { getTeamColor, getTeamTextColor } from '../teamColors';
 import { FIFA_RANKINGS } from '../fifaRankings';
 import WavingFlag from './WavingFlag';
@@ -43,6 +44,7 @@ function matchResult(m: Match) {
 
 export default function TeamSheet({ team, row, matches, teams, onClose }: Props) {
   const teamColor = getTeamColor(team.id);
+  const standings = useMemo(() => computeStandings(matches, teams), [matches, teams]);
   const [dragY, setDragY] = useState(0);
   const [dismissing, setDismissing] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
@@ -242,45 +244,49 @@ export default function TeamSheet({ team, row, matches, teams, onClose }: Props)
                   return (
                     <div key={m.id} className={`${cardStyles.card} ${live ? cardStyles.cardLive : ''}`}
                       style={{ background: `linear-gradient(122.71deg, ${homeColor} 12%, ${awayColor} 88%)` }}>
-                      <div
-                        className={`${cardStyles.teamSide} ${cardStyles.teamSideLeft} ${homeDim ? cardStyles.teamSideDim : ''}`}
-                        style={{ background: 'transparent', color: getTeamTextColor(m.homeTeamId) }}
-                      >
-                        {home.crest
-                          ? <img src={home.crest} className={cardStyles.teamFlagImg} alt={home.name} />
-                          : <span className={cardStyles.teamFlag}>{home.flag}</span>}
-                        <span className={cardStyles.teamName}>{home.name}</span>
+                      <div className={cardStyles.cardTop}>
+
+                        <div
+                          className={`${cardStyles.teamSide} ${cardStyles.teamSideLeft} ${homeDim ? cardStyles.teamSideDim : ''}`}
+                          style={{ background: 'transparent', color: getTeamTextColor(m.homeTeamId) }}
+                        >
+                          {home.crest
+                            ? <img src={home.crest} className={cardStyles.teamFlagImg} alt={home.name} />
+                            : <span className={cardStyles.teamFlag}>{home.flag}</span>}
+                          <span className={cardStyles.teamName}>{home.name}</span>
+                        </div>
+                        <div
+                          className={`${cardStyles.teamSide} ${cardStyles.teamSideRight} ${awayDim ? cardStyles.teamSideDim : ''}`}
+                          style={{ background: 'transparent', color: getTeamTextColor(m.awayTeamId) }}
+                        >
+                          {away.crest
+                            ? <img src={away.crest} className={cardStyles.teamFlagImg} alt={away.name} />
+                            : <span className={cardStyles.teamFlag}>{away.flag}</span>}
+                          <span className={cardStyles.teamName}>{away.name}</span>
+                        </div>
+                        <button
+                          className={`${cardStyles.overlay} ${live ? cardStyles.overlayLive : ''}`}
+                          onClick={() => setSelectedMatch(m)}
+                        >
+                          {live && (
+                            <div className={cardStyles.liveBadge}>
+                              <span className={cardStyles.liveDot} />
+                              <span className={cardStyles.liveText}>LIVE</span>
+                            </div>
+                          )}
+                          {m.homeScore !== null && m.awayScore !== null ? (
+                            <div className={cardStyles.score}>
+                              <span className={cardStyles.scoreNum}>{m.homeScore}</span>
+                              <span className={cardStyles.scoreDash}>&nbsp;-&nbsp;</span>
+                              <span className={cardStyles.scoreNum}>{m.awayScore}</span>
+                            </div>
+                          ) : (
+                            <div className={cardStyles.time}>{m.time}</div>
+                          )}
+                          <div className={cardStyles.groupLabel}>Group {m.group}</div>
+                        </button>
                       </div>
-                      <div
-                        className={`${cardStyles.teamSide} ${cardStyles.teamSideRight} ${awayDim ? cardStyles.teamSideDim : ''}`}
-                        style={{ background: 'transparent', color: getTeamTextColor(m.awayTeamId) }}
-                      >
-                        {away.crest
-                          ? <img src={away.crest} className={cardStyles.teamFlagImg} alt={away.name} />
-                          : <span className={cardStyles.teamFlag}>{away.flag}</span>}
-                        <span className={cardStyles.teamName}>{away.name}</span>
-                      </div>
-                      <button
-                        className={`${cardStyles.overlay} ${live ? cardStyles.overlayLive : ''}`}
-                        onClick={() => setSelectedMatch(m)}
-                      >
-                        {live && (
-                          <div className={cardStyles.liveBadge}>
-                            <span className={cardStyles.liveDot} />
-                            <span className={cardStyles.liveText}>LIVE</span>
-                          </div>
-                        )}
-                        {m.homeScore !== null && m.awayScore !== null ? (
-                          <div className={cardStyles.score}>
-                            <span className={cardStyles.scoreNum}>{m.homeScore}</span>
-                            <span className={cardStyles.scoreDash}>&nbsp;-&nbsp;</span>
-                            <span className={cardStyles.scoreNum}>{m.awayScore}</span>
-                          </div>
-                        ) : (
-                          <div className={cardStyles.time}>{m.time}</div>
-                        )}
-                        <div className={cardStyles.groupLabel}>Group {m.group}</div>
-                      </button>
+                      {(() => { const s = getStakeSummary(m, standings, teams); return s ? <div className={cardStyles.cardSummary}>{s}</div> : null; })()}
                     </div>
                   );
                 })}
