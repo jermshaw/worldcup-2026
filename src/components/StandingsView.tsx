@@ -11,7 +11,7 @@ interface Props {
   standings: Map<Group, StandingRow[]>;
 }
 
-const CARD_W  = 300;
+const CARD_W  = 330;
 const CARD_H  = 68;
 const COL_GAP = 30;
 const COL_W   = CARD_W + COL_GAP; // 307
