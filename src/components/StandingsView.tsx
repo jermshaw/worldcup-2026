@@ -2,6 +2,7 @@ import { useMemo, useEffect } from 'react';
 import type { Match, Team, Group, StandingRow } from '../data';
 import { GROUPS } from '../data';
 import { getGroupSummary } from '../utils/stakeSummary';
+import { getTeamColor, getTeamTextColor } from '../teamColors';
 import styles from './StandingsView.module.css';
 
 interface Props {
@@ -51,10 +52,17 @@ export default function StandingsView({ matches, teams, standings }: Props) {
 
   const bySlot = useMemo(() => {
     const map = new Map<string, Match>();
+    const byStage = new Map<string, Match[]>();
     for (const m of matches) {
-      if (m.stage !== 'Group Stage' && m.matchday != null) {
-        map.set(`${m.stage}:${m.matchday}`, m);
+      if (m.stage !== 'Group Stage') {
+        const list = byStage.get(m.stage) ?? [];
+        list.push(m);
+        byStage.set(m.stage, list);
       }
+    }
+    for (const [stage, stageMatches] of byStage) {
+      stageMatches.sort((a, b) => a.apiId - b.apiId);
+      stageMatches.forEach((m, i) => map.set(`${stage}:${i + 1}`, m));
     }
     return map;
   }, [matches]);
@@ -152,18 +160,28 @@ export default function StandingsView({ matches, teams, standings }: Props) {
                     const homeWon = scored && match!.homeScore! > match!.awayScore!;
                     const awayWon = scored && match!.awayScore! > match!.homeScore!;
 
+                    const homeColor = home ? getTeamColor(match!.homeTeamId) : null;
+                    const awayColor = away ? getTeamColor(match!.awayTeamId) : null;
+                    const cardBg = homeColor && awayColor
+                      ? `linear-gradient(160deg, ${homeColor} 0%, ${awayColor} 100%)`
+                      : homeColor
+                      ? `linear-gradient(160deg, ${homeColor} 0%, #1a1a1a 100%)`
+                      : awayColor
+                      ? `linear-gradient(160deg, #1a1a1a 0%, ${awayColor} 100%)`
+                      : undefined;
+
                     return (
                       <div
                         key={idx}
                         className={styles.bracketCard}
-                        style={{ top, width: CARD_W, height: CARD_H }}
+                        style={{ top, width: CARD_W, height: CARD_H, ...(cardBg ? { background: cardBg } : {}) }}
                       >
                         <div className={`${styles.bracketTeam} ${scored && !homeWon ? styles.bracketLoser : ''}`}>
                           {home ? (
                             <>
                               <span className={styles.bracketFlag}>{home.flag}</span>
-                              <span className={styles.bracketName}>{home.name}</span>
-                              {scored && <span className={styles.bracketScore}>{match!.homeScore}</span>}
+                              <span className={styles.bracketName} style={{ color: getTeamTextColor(match!.homeTeamId) }}>{home.name}</span>
+                              {scored && <span className={styles.bracketScore} style={{ color: getTeamTextColor(match!.homeTeamId) }}>{match!.homeScore}</span>}
                             </>
                           ) : <span className={styles.bracketTbd}>TBD</span>}
                         </div>
@@ -172,8 +190,8 @@ export default function StandingsView({ matches, teams, standings }: Props) {
                           {away ? (
                             <>
                               <span className={styles.bracketFlag}>{away.flag}</span>
-                              <span className={styles.bracketName}>{away.name}</span>
-                              {scored && <span className={styles.bracketScore}>{match!.awayScore}</span>}
+                              <span className={styles.bracketName} style={{ color: getTeamTextColor(match!.awayTeamId) }}>{away.name}</span>
+                              {scored && <span className={styles.bracketScore} style={{ color: getTeamTextColor(match!.awayTeamId) }}>{match!.awayScore}</span>}
                             </>
                           ) : <span className={styles.bracketTbd}>TBD</span>}
                         </div>
