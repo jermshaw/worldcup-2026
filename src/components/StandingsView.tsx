@@ -11,7 +11,7 @@ interface Props {
   standings: Map<Group, StandingRow[]>;
 }
 
-const CARD_W  = 277;
+const CARD_W  = 300;
 const CARD_H  = 68;
 const COL_GAP = 30;
 const COL_W   = CARD_W + COL_GAP; // 307
@@ -71,15 +71,14 @@ export default function StandingsView({ matches, teams, standings }: Props) {
     <div className={styles.root}>
       <h1 className={styles.title}>Standings</h1>
 
-      <div className={styles.swiper}>
+      <div className={styles.mainScroll}>
 
-        {/* ── Page 1: Group Stage ───────────────────────── */}
-        <div className={styles.page}>
+        {/* ── Group Stage ───────────────────────────────── */}
+        <div className={styles.groupSection}>
           <p className={styles.stageLabel}>Group stage</p>
           {GROUPS.map(group => {
             const rows = standings.get(group) ?? [];
             if (rows.length === 0) return null;
-            const maxPts = Math.max(...rows.map(r => r.pts));
             return (
               <div key={group} className={styles.card}>
                 <p className={styles.groupTitle}>Group {group}</p>
@@ -105,9 +104,8 @@ export default function StandingsView({ matches, teams, standings }: Props) {
           })}
         </div>
 
-        {/* ── Page 2: Knockout Bracket ──────────────────── */}
-        <div className={`${styles.page} ${styles.bracketPage}`}>
-          <div className={styles.bracketScroll}>
+        {/* ── Knockout Bracket ──────────────────────────── */}
+        <div className={styles.bracketScroll}>
 
             {/* SVG connector lines spanning the full canvas */}
             <svg
@@ -201,7 +199,6 @@ export default function StandingsView({ matches, teams, standings }: Props) {
                 </div>
               );
             })}
-          </div>
         </div>
 
       </div>

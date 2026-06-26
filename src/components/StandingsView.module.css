@@ -16,24 +16,23 @@
   flex-shrink: 0;
 }
 
-/* ── Swiper ───────────────────────────────────────────── */
-.swiper {
+.mainScroll {
   display: flex;
+  flex-direction: row;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
   flex: 1;
-  padding-right: 32px;
+  width: 100%;
+  min-width: 0;
 }
-.swiper::-webkit-scrollbar { display: none; }
+.mainScroll::-webkit-scrollbar { display: none; }
 
-.page {
-  width: calc(100% - 32px);
-  min-width: calc(100% - 32px);
-  max-width: calc(100% - 32px);
-  flex-shrink: 0;
+.groupSection {
+  flex: 0 0 300px;
   scroll-snap-align: start;
   overflow-y: auto;
   padding: 0 20px 100px;
@@ -41,7 +40,7 @@
   -ms-overflow-style: none;
   box-sizing: border-box;
 }
-.page::-webkit-scrollbar { display: none; }
+.groupSection::-webkit-scrollbar { display: none; }
 
 /* ── Stage label ──────────────────────────────────────── */
 .stageLabel {
@@ -61,6 +60,8 @@
   margin-bottom: 12px;
   overflow: hidden;
   min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .groupSummary {
@@ -172,20 +173,12 @@
   margin-top: 40px;
 }
 
-/* ── Bracket page ─────────────────────────────────────── */
-.bracketPage {
-  padding: 0 0 100px 20px;
-}
-
 .bracketScroll {
   position: relative;
   display: flex;
-  overflow-x: auto;
-  overflow-y: visible;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow: visible;
+  padding: 0 20px 100px 20px;
+  flex-shrink: 0;
 }
 .bracketScroll::-webkit-scrollbar { display: none; }
 
