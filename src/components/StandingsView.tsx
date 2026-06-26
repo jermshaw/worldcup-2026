@@ -1,8 +1,9 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import type { Match, Team, Group, StandingRow } from '../data';
 import { GROUPS } from '../data';
 import { getGroupSummary } from '../utils/stakeSummary';
 import { getTeamColor, getTeamTextColor } from '../teamColors';
+import MatchSheet from './MatchSheet';
 import styles from './StandingsView.module.css';
 
 interface Props {
@@ -12,10 +13,10 @@ interface Props {
 }
 
 const CARD_W  = 330;
-const CARD_H  = 68;
+const CARD_H  = 84;
 const COL_GAP = 30;
-const COL_W   = CARD_W + COL_GAP; // 307
-const SLOT_H  = 76;
+const COL_W   = CARD_W + COL_GAP;
+const SLOT_H  = 92;
 const HEADER_H = 24;
 const PAD_Y   = 16;
 
@@ -49,6 +50,13 @@ const BRACKET_W = (KNOCKOUT_ROUNDS.length - 1) * COL_W + CARD_W;
 
 export default function StandingsView({ matches, teams, standings }: Props) {
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollX, setScrollX] = useState(0);
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollX(e.currentTarget.scrollLeft);
+  }, []);
 
   const bySlot = useMemo(() => {
     const map = new Map<string, Match>();
@@ -68,14 +76,33 @@ export default function StandingsView({ matches, teams, standings }: Props) {
   }, [matches]);
 
   return (
+    <>
     <div className={styles.root}>
       <h1 className={styles.title}>Standings</h1>
 
-      <div className={styles.mainScroll}>
+      {/* ── Sticky column labels ── */}
+      <div className={styles.labelStrip}>
+        <div
+          className={styles.labelInner}
+          style={{ transform: `translateX(-${scrollX}px)` }}
+        >
+          <div className={styles.labelColHeader} style={{ width: 330 }}>Group stage</div>
+          {LAYOUT.map((round, ri) => (
+            <div
+              key={round.stage}
+              className={styles.labelColHeader}
+              style={{ width: ri === LAYOUT.length - 1 ? CARD_W : COL_W }}
+            >
+              {round.label}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.mainScroll} ref={scrollRef} onScroll={handleScroll}>
 
         {/* ── Group Stage ───────────────────────────────── */}
         <div className={styles.groupSection}>
-          <p className={styles.stageLabel}>Group stage</p>
           {GROUPS.map(group => {
             const rows = standings.get(group) ?? [];
             if (rows.length === 0) return null;
@@ -138,17 +165,13 @@ export default function StandingsView({ matches, teams, standings }: Props) {
             {/* Round columns — each is a snap target */}
             {LAYOUT.map((round, ri) => {
               const isLast = ri === LAYOUT.length - 1;
+
               return (
                 <div
                   key={round.stage}
                   className={styles.roundCol}
                   style={{ width: isLast ? CARD_W : COL_W, height: BRACKET_H }}
                 >
-                  {/* Column header */}
-                  <div className={styles.roundLabel} style={{ top: 0, width: CARD_W }}>
-                    {round.label}
-                  </div>
-
                   {/* Match cards */}
                   {round.tops.map((top, idx) => {
                     const match  = bySlot.get(`${round.stage}:${idx + 1}`);
@@ -168,11 +191,13 @@ export default function StandingsView({ matches, teams, standings }: Props) {
                       ? `linear-gradient(160deg, #1a1a1a 0%, ${awayColor} 100%)`
                       : undefined;
 
+                    const tappable = match && (home || away);
                     return (
                       <div
                         key={idx}
                         className={styles.bracketCard}
-                        style={{ top, width: CARD_W, height: CARD_H, ...(cardBg ? { background: cardBg } : {}) }}
+                        style={{ top, width: CARD_W, height: CARD_H, ...(cardBg ? { background: cardBg } : {}), ...(tappable ? { cursor: 'pointer' } : {}) }}
+                        onClick={tappable ? () => setSelectedMatch(match) : undefined}
                       >
                         <div className={`${styles.bracketTeam} ${scored && !homeWon ? styles.bracketLoser : ''}`}>
                           {home ? (
@@ -203,5 +228,14 @@ export default function StandingsView({ matches, teams, standings }: Props) {
 
       </div>
     </div>
+
+    {selectedMatch && (
+      <MatchSheet
+        match={selectedMatch}
+        teams={teams}
+        onClose={() => setSelectedMatch(null)}
+      />
+    )}
+    </>
   );
 }
