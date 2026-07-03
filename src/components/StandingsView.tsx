@@ -13,10 +13,10 @@ interface Props {
 }
 
 const CARD_W  = 330;
-const CARD_H  = 84;
+const CARD_H  = 104;
 const COL_GAP = 30;
 const COL_W   = CARD_W + COL_GAP;
-const SLOT_H  = 92;
+const SLOT_H  = 114;
 const HEADER_H = 24;
 const PAD_Y   = 16;
 
@@ -68,10 +68,63 @@ export default function StandingsView({ matches, teams, standings }: Props) {
         byStage.set(m.stage, list);
       }
     }
+
+    // ── Round of 32: infer bracket order from R16 pairings ──
+    // R16 apiIds are sequential in bracket order (created as placeholders before the
+    // tournament). R32 apiIds are also sequential but in calendar/schedule order, which
+    // does not match bracket pairing. We recover the correct R32 order by looking at
+    // which R32 matches produced each R16 team.
+    const r32All = (byStage.get('Round of 32') ?? []).sort((a, b) => a.apiId - b.apiId);
+    const r16All = (byStage.get('Round of 16') ?? []).sort((a, b) => a.apiId - b.apiId);
+
+    const winnerToR32 = new Map<string, Match>();
+    for (const m of r32All) {
+      if (m.status === 'FINISHED' && m.homeScore !== null && m.awayScore !== null) {
+        if (m.homeScore !== m.awayScore) {
+          const winner = m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId;
+          winnerToR32.set(winner, m);
+        }
+      }
+    }
+
+    const r32Ordered: (Match | null)[] = [];
+    const usedR32Ids = new Set<string>();
+
+    for (const r16 of r16All) {
+      const homeTbd = r16.homeTeamId.startsWith('TBD');
+      const awayTbd = r16.awayTeamId.startsWith('TBD');
+      const homeR32 = homeTbd ? null : (winnerToR32.get(r16.homeTeamId) ?? null);
+      const awayR32 = awayTbd ? null : (winnerToR32.get(r16.awayTeamId) ?? null);
+
+      for (const r32 of [homeR32, awayR32]) {
+        if (r32 && !usedR32Ids.has(r32.id)) {
+          r32Ordered.push(r32);
+          usedR32Ids.add(r32.id);
+        } else {
+          r32Ordered.push(null);
+        }
+      }
+    }
+
+    // Fill null slots with unmatched R32 matches in apiId order
+    const r32Remaining = r32All.filter(m => !usedR32Ids.has(m.id));
+    let ri = 0;
+    for (let i = 0; i < r32Ordered.length; i++) {
+      if (r32Ordered[i] === null && ri < r32Remaining.length) {
+        r32Ordered[i] = r32Remaining[ri++];
+      }
+    }
+    while (ri < r32Remaining.length) r32Ordered.push(r32Remaining[ri++]);
+
+    r32Ordered.forEach((m, i) => { if (m) map.set(`Round of 32:${i + 1}`, m); });
+
+    // ── All other knockout rounds: apiId order = bracket order ──
     for (const [stage, stageMatches] of byStage) {
+      if (stage === 'Round of 32') continue;
       stageMatches.sort((a, b) => a.apiId - b.apiId);
       stageMatches.forEach((m, i) => map.set(`${stage}:${i + 1}`, m));
     }
+
     return map;
   }, [matches]);
 
@@ -199,6 +252,11 @@ export default function StandingsView({ matches, teams, standings }: Props) {
                         style={{ top, width: CARD_W, height: CARD_H, ...(cardBg ? { background: cardBg } : {}), ...(tappable ? { cursor: 'pointer' } : {}) }}
                         onClick={tappable ? () => setSelectedMatch(match) : undefined}
                       >
+                        {match && (
+                          <div className={styles.bracketMatchInfo}>
+                            {new Date(`${match.date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {match.time}
+                          </div>
+                        )}
                         <div className={`${styles.bracketTeam} ${scored && !homeWon ? styles.bracketLoser : ''}`}>
                           {home ? (
                             <>
