@@ -265,7 +265,7 @@ export default function StandingsView({ matches, teams, standings }: Props) {
                       >
                         {match && (
                           <div className={styles.bracketMatchInfo}>
-                            {new Date(`${match.date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {match.time}
+                            {(() => { const d = new Date(`${match.date}T12:00:00`); return `${d.toLocaleDateString('en-US', { weekday: 'short' })} • ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • ${match.time}`; })()}
                           </div>
                         )}
                         <div className={`${styles.bracketTeam} ${scored && !homeWon ? styles.bracketLoser : ''}`}>
