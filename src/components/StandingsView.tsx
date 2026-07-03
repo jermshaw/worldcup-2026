@@ -69,24 +69,22 @@ export default function StandingsView({ matches, teams, standings }: Props) {
       }
     }
 
-    // ── Round of 32: infer bracket order from R16 pairings ──
-    // R16 apiIds are sequential in bracket order (created as placeholders before the
-    // tournament). R32 apiIds are also sequential but in calendar/schedule order, which
-    // does not match bracket pairing. We recover the correct R32 order by looking at
-    // which R32 matches produced each R16 team.
     const r32All = (byStage.get('Round of 32') ?? []).sort((a, b) => a.apiId - b.apiId);
     const r16All = (byStage.get('Round of 16') ?? []).sort((a, b) => a.apiId - b.apiId);
 
-    const winnerToR32 = new Map<string, Match>();
+    // Build winner lookups for finished R32 matches
+    const winnerToR32 = new Map<string, Match>();   // teamId → their R32 match
+    const r32MatchWinner = new Map<string, string>(); // matchId → winner teamId
     for (const m of r32All) {
-      if (m.status === 'FINISHED' && m.homeScore !== null && m.awayScore !== null) {
-        if (m.homeScore !== m.awayScore) {
-          const winner = m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId;
-          winnerToR32.set(winner, m);
-        }
+      if (m.status === 'FINISHED' && m.homeScore !== null && m.awayScore !== null && m.homeScore !== m.awayScore) {
+        const winner = m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId;
+        winnerToR32.set(winner, m);
+        r32MatchWinner.set(m.id, winner);
       }
     }
 
+    // Compute R32 bracket order by tracing which R32 match produced each R16 team.
+    // For TBD R16 slots, remaining R32 matches fill in apiId order.
     const r32Ordered: (Match | null)[] = [];
     const usedR32Ids = new Set<string>();
 
@@ -106,34 +104,37 @@ export default function StandingsView({ matches, teams, standings }: Props) {
       }
     }
 
-    // Fill null slots with unmatched R32 matches in apiId order
     const r32Remaining = r32All.filter(m => !usedR32Ids.has(m.id));
     let ri = 0;
     for (let i = 0; i < r32Ordered.length; i++) {
-      if (r32Ordered[i] === null && ri < r32Remaining.length) {
-        r32Ordered[i] = r32Remaining[ri++];
-      }
+      if (r32Ordered[i] === null && ri < r32Remaining.length) r32Ordered[i] = r32Remaining[ri++];
     }
     while (ri < r32Remaining.length) r32Ordered.push(r32Remaining[ri++]);
 
     r32Ordered.forEach((m, i) => { if (m) map.set(`Round of 32:${i + 1}`, m); });
 
-    // ── All other knockout rounds: apiId order = bracket order ──
-    // If the API created new match records for known teams (instead of updating
-    // the original TBD placeholders), there may be more matches than bracket slots.
-    // In that case, drop all-TBD matches so known matchups take the visible slots.
-    for (const [stage, stageMatches] of byStage) {
-      if (stage === 'Round of 32') continue;
-      stageMatches.sort((a, b) => a.apiId - b.apiId);
-      const expectedCount = KNOCKOUT_ROUNDS.find(r => r.stage === stage)?.count;
-      let toSlot = stageMatches;
-      if (expectedCount && stageMatches.length > expectedCount) {
-        const known = stageMatches.filter(m => !m.homeTeamId.startsWith('TBD') || !m.awayTeamId.startsWith('TBD'));
-        const tbd   = stageMatches.filter(m =>  m.homeTeamId.startsWith('TBD') && m.awayTeamId.startsWith('TBD'));
-        toSlot = [...known, ...tbd].slice(0, expectedCount);
-        toSlot.sort((a, b) => a.apiId - b.apiId);
+    // R16: assign by apiId order; for TBD slots where both R32 feeders have finished,
+    // synthesize the match with inferred teams so the bracket stays current.
+    r16All.forEach((r16Match, i) => {
+      const allTbd = r16Match.homeTeamId.startsWith('TBD') && r16Match.awayTeamId.startsWith('TBD');
+      if (allTbd) {
+        const r32Home = r32Ordered[2 * i] ?? null;
+        const r32Away = r32Ordered[2 * i + 1] ?? null;
+        const homeWinner = r32Home ? (r32MatchWinner.get(r32Home.id) ?? null) : null;
+        const awayWinner = r32Away ? (r32MatchWinner.get(r32Away.id) ?? null) : null;
+        if (homeWinner && awayWinner) {
+          map.set(`Round of 16:${i + 1}`, { ...r16Match, homeTeamId: homeWinner, awayTeamId: awayWinner });
+          return;
+        }
       }
-      toSlot.forEach((m, i) => map.set(`${stage}:${i + 1}`, m));
+      map.set(`Round of 16:${i + 1}`, r16Match);
+    });
+
+    // QF / SF / Final: apiId order = bracket order
+    for (const [stage, stageMatches] of byStage) {
+      if (stage === 'Round of 32' || stage === 'Round of 16') continue;
+      stageMatches.sort((a, b) => a.apiId - b.apiId);
+      stageMatches.forEach((m, i) => map.set(`${stage}:${i + 1}`, m));
     }
 
     return map;

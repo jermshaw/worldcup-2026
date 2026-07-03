@@ -43,33 +43,6 @@ export function useLiveScores() {
       writeCache(data);
       const { matches: newMatches, teams: newTeams } = buildFromApi(data);
 
-      // Manual patch: POR vs ESP R16 on Jul 6 — API not returning this match correctly
-      const hasR16PorEsp = newMatches.some(m =>
-        m.stage === 'Round of 16' &&
-        ((m.homeTeamId === 'POR' && m.awayTeamId === 'ESP') ||
-         (m.homeTeamId === 'ESP' && m.awayTeamId === 'POR'))
-      );
-      if (!hasR16PorEsp) {
-        newMatches.push({
-          id: 'manual-r16-por-esp',
-          apiId: 999998,
-          stage: 'Round of 16',
-          group: undefined,
-          matchday: undefined,
-          matchNumber: undefined,
-          date: '2026-07-06',
-          time: '8 PM',
-          utcDate: '2026-07-07T00:00:00Z',
-          homeTeamId: 'POR',
-          awayTeamId: 'ESP',
-          venue: '',
-          homeScore: null,
-          awayScore: null,
-          status: 'TIMED',
-          timeElapsed: undefined,
-        });
-      }
-
       // On subsequent fetches, preserve any scores not yet updated
       if (matchesRef.current.length > 0) {
         const prevById = new Map(matchesRef.current.map(m => [m.apiId, m]));
