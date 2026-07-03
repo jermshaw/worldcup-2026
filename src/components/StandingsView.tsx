@@ -119,10 +119,21 @@ export default function StandingsView({ matches, teams, standings }: Props) {
     r32Ordered.forEach((m, i) => { if (m) map.set(`Round of 32:${i + 1}`, m); });
 
     // ── All other knockout rounds: apiId order = bracket order ──
+    // If the API created new match records for known teams (instead of updating
+    // the original TBD placeholders), there may be more matches than bracket slots.
+    // In that case, drop all-TBD matches so known matchups take the visible slots.
     for (const [stage, stageMatches] of byStage) {
       if (stage === 'Round of 32') continue;
       stageMatches.sort((a, b) => a.apiId - b.apiId);
-      stageMatches.forEach((m, i) => map.set(`${stage}:${i + 1}`, m));
+      const expectedCount = KNOCKOUT_ROUNDS.find(r => r.stage === stage)?.count;
+      let toSlot = stageMatches;
+      if (expectedCount && stageMatches.length > expectedCount) {
+        const known = stageMatches.filter(m => !m.homeTeamId.startsWith('TBD') || !m.awayTeamId.startsWith('TBD'));
+        const tbd   = stageMatches.filter(m =>  m.homeTeamId.startsWith('TBD') && m.awayTeamId.startsWith('TBD'));
+        toSlot = [...known, ...tbd].slice(0, expectedCount);
+        toSlot.sort((a, b) => a.apiId - b.apiId);
+      }
+      toSlot.forEach((m, i) => map.set(`${stage}:${i + 1}`, m));
     }
 
     return map;
