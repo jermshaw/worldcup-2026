@@ -93,7 +93,19 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
       arr.push(m);
       map.set(m.date, arr);
     }
-    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
+    const sortedDates = [...map.keys()].sort();
+    if (sortedDates.length === 0) return [] as { date: string; dayMatches: Match[] | null }[];
+
+    // Fill every calendar day between first and last match date
+    const result: { date: string; dayMatches: Match[] | null }[] = [];
+    const cursor = new Date(`${sortedDates[0]}T12:00:00`);
+    const last   = new Date(`${sortedDates[sortedDates.length - 1]}T12:00:00`);
+    while (cursor <= last) {
+      const d = cursor.toLocaleDateString('en-CA');
+      result.push({ date: d, dayMatches: map.get(d) ?? null });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return result;
   }, [matches]);
 
   function matchResult(m: Match) {
@@ -115,7 +127,7 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
       </button>
     )}
     <div className={styles.root}>
-      {byDate.map(([date, dayMatches]) => {
+      {byDate.map(({ date, dayMatches }) => {
         const { primary, secondary } = dayLabel(date);
         return (
           <div key={date} className={styles.day} ref={isToday(date) ? setTodayEl : undefined}>
@@ -124,6 +136,9 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
               {secondary && <span className={styles.daySecondary}>{secondary}</span>}
             </div>
 
+            {dayMatches === null ? (
+              <div className={styles.noGames}>Sadly, no games today</div>
+            ) : (
             <div className={styles.matchList}>
               {dayMatches.map(m => {
                 const summary = getStakeSummary(m, standings, teams);
@@ -226,6 +241,7 @@ export default function ScheduleView({ matches, teams, scrollRef }: Props) {
                 );
               })}
             </div>
+            )}
           </div>
         );
       })}

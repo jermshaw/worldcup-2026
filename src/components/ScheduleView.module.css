@@ -94,6 +94,15 @@
   margin-left: 4px;
 }
 
+/* ── No games row ────────────────────────────────────── */
+.noGames {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.25);
+  font-style: italic;
+  padding: 2px 0 4px;
+}
+
 /* ── Match list ──────────────────────────────────────── */
 .matchList {
   display: flex;
